@@ -209,6 +209,21 @@ body {
   border: 1px solid #f5c6cb;
 }
 
+.text-button {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.text-button:hover {
+  color: #c0392b;
+}
+
 /* Responsive Design */
 @media (max-width: 480px) {
   .auth-container {
