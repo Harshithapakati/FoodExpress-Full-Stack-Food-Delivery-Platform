@@ -275,3 +275,14 @@
     justify-content: space-between;
   }
 }
+
+.cart-warning {
+  color: #e23744;
+  background: #fff7f7;
+  padding: 12px;
+  margin-top: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 15px;
+}

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import './CartModal.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./CartModal.css";
 
 function CartModal({ onClose, updateCartCount }) {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCart();
@@ -11,30 +13,29 @@ function CartModal({ onClose, updateCartCount }) {
 
   const fetchCart = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/cart', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/cart", {
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
       if (data.success) {
         setCart(data.cart);
+        console.log("Cart data fetched in modal:", data.cart);
       }
     } catch (error) {
-      console.error('Error fetching cart:', error);
+      console.error("Error fetching cart:", error);
     }
     setLoading(false);
   };
 
   const updateQuantity = async (itemId, newQuantity) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await fetch(`http://localhost:5000/api/cart/update/${itemId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ quantity: newQuantity })
       });
@@ -44,18 +45,16 @@ function CartModal({ onClose, updateCartCount }) {
         updateCartCount();
       }
     } catch (error) {
-      console.error('Error updating quantity:', error);
+      console.error("Error updating quantity:", error);
     }
   };
 
   const removeItem = async (itemId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await fetch(`http://localhost:5000/api/cart/remove/${itemId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
       if (data.success) {
@@ -63,20 +62,17 @@ function CartModal({ onClose, updateCartCount }) {
         updateCartCount();
       }
     } catch (error) {
-      console.error('Error removing item:', error);
+      console.error("Error removing item:", error);
     }
   };
 
   const clearCart = async () => {
-    if (!window.confirm('Are you sure you want to clear your cart?')) return;
-    
+    if (!window.confirm("Are you sure you want to clear your cart?")) return;
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/cart/clear', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:5000/api/cart/clear", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
       if (data.success) {
@@ -84,19 +80,25 @@ function CartModal({ onClose, updateCartCount }) {
         updateCartCount();
       }
     } catch (error) {
-      console.error('Error clearing cart:', error);
+      console.error("Error clearing cart:", error);
     }
   };
 
   const calculateTotal = () => {
-    if (!cart || !cart.items) return 0;
-    return cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    if (!(cart && cart.items)) return 0;
+    return cart.items.reduce((total, item) => total + item.price * item.quantity, 0);
   };
+
+  const singleRestaurant =
+    cart &&
+    cart.items &&
+    cart.items.length > 0 &&
+    cart.items.every(item => item.restaurantName === cart.items[0].restaurantName);
 
   if (loading) {
     return (
       <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content cart-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-content cart-modal" onClick={e => e.stopPropagation()}>
           <div className="loading">Loading cart...</div>
         </div>
       </div>
@@ -105,7 +107,7 @@ function CartModal({ onClose, updateCartCount }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content cart-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-content cart-modal" onClick={e => e.stopPropagation()}>
         <div className="cart-header">
           <h2>🛒 Your Cart</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
@@ -114,10 +116,10 @@ function CartModal({ onClose, updateCartCount }) {
         {cart && cart.items && cart.items.length > 0 ? (
           <>
             <div className="cart-items">
-              {cart.items.map((item) => (
+              {cart.items.map(item => (
                 <div key={item._id} className="cart-item">
-                  <img 
-                    src={item.image || 'https://via.placeholder.com/80'} 
+                  <img
+                    src={item.image || "https://via.placeholder.com/80"}
                     alt={item.name}
                     className="cart-item-image"
                   />
@@ -126,29 +128,23 @@ function CartModal({ onClose, updateCartCount }) {
                     <p className="cart-item-restaurant">{item.restaurantName}</p>
                     <p className="cart-item-price">₹{item.price}</p>
                   </div>
-
-                <div className="cart-item-actions">
+                  <div className="cart-item-actions">
                     <div className="quantity-controls">
-                      <button 
+                      <button
                         onClick={() => updateQuantity(item._id, item.quantity - 1)}
                         className="quantity-btn"
-                      >
-                        −
-                      </button>
+                        disabled={item.quantity <= 1}
+                      >−</button>
                       <span className="quantity">{item.quantity}</span>
-                      <button 
+                      <button
                         onClick={() => updateQuantity(item._id, item.quantity + 1)}
                         className="quantity-btn"
-                      >
-                        +
-                      </button>
+                      >+</button>
                     </div>
-                    <button 
+                    <button
                       onClick={() => removeItem(item._id)}
                       className="remove-btn"
-                    >
-                      🗑️
-                    </button>
+                    >🗑️</button>
                   </div>
                 </div>
               ))}
@@ -159,7 +155,26 @@ function CartModal({ onClose, updateCartCount }) {
                 <span>Total:</span>
                 <span className="total-amount">₹{calculateTotal()}</span>
               </div>
-              <button className="checkout-btn">Proceed to Checkout</button>
+
+              {singleRestaurant ? (
+                <button
+                  className="checkout-btn"
+                  onClick={() => {
+                    onClose();
+                    navigate("/checkout");
+                  }}
+                >
+                  Proceed to Checkout
+                </button>
+              ) : (
+                <div className="cart-warning">
+                  <p>
+                    You can only order from one restaurant at a time.
+                    <br />
+                    Please remove items from other restaurants.
+                  </p>
+                </div>
+              )}
               <button className="clear-cart-btn" onClick={clearCart}>
                 Clear Cart
               </button>
@@ -173,7 +188,7 @@ function CartModal({ onClose, updateCartCount }) {
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 }
 

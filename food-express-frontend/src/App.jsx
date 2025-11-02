@@ -5,6 +5,7 @@ import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
 import BrowseRestaurants from './components/BrowseRestaurants';
 import ViewMenu from './components/ViewMenu';
+import CheckoutPage from './components/CheckoutPage';
 import './App.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/browse" element={<BrowseRestaurants />} />
           <Route path="/menu" element={<ViewMenu />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
         </Routes>
       </div>
     </Router>
