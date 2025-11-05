@@ -29,12 +29,20 @@ const Login = () => {
     const result = await authService.login(formData.email, formData.password);
     
     if (result.success) {
-      setMessage('Login successful! Welcome to FoodExpress!');
+      setMessage('Login successful! Welcome to FoodHub!');
       setMessageType('success');
-      // You can redirect to dashboard here later
-      // setTimeout(() => {
-      //   navigate('/dashboard');
-      // }, 2000);
+      // Store user data for BrowseRestaurants component
+      try {
+        const payload = JSON.parse(atob(result.token.split('.')[1]));
+        const userObj = { email: payload.email, name: payload.email.split('@')[0], userId: payload.userId };
+        localStorage.setItem('user', JSON.stringify(userObj));
+      } catch (e) {
+        console.error('Error parsing token:', e);
+      }
+      // Redirect to browse restaurants after successful login
+      setTimeout(() => {
+        navigate('/browse');
+      }, 1500);
     } else {
       setMessage(result.message);
       setMessageType('error');

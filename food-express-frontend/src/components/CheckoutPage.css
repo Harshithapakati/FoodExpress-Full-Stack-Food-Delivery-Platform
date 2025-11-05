@@ -1,0 +1,218 @@
+.checkout-page-container {
+  background-color: #f8f8f8;
+  min-height: 100vh;
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+.checkout-main-container {
+  max-width: 950px;
+  margin: 48px auto;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px #ccc2;
+  display: flex;
+  padding: 32px 0;
+}
+
+.checkout-cart-section {
+  flex: 1.3;
+  border-right: 1px solid #eee;
+  padding: 0 40px 0 44px;
+}
+
+.checkout-form-section {
+  flex: 1;
+  padding: 32px 40px;
+}
+
+.checkout-restaurant-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.checkout-rest-img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.checkout-restaurant-name {
+  font-weight: 700;
+  font-size: 20px;
+  color: #222;
+}
+
+.checkout-restaurant-address {
+  color: #666;
+  font-size: 15px;
+}
+
+.checkout-cart-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  background: #f7f8fa;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 20px;
+}
+
+.checkout-cart-item-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.checkout-cart-item-details {
+  flex: 1;
+}
+
+.checkout-cart-item-name {
+  font-weight: 600;
+  font-size: 17px;
+  margin-bottom: 4px;
+}
+
+.checkout-cart-item-price {
+  font-weight: 600;
+  font-size: 17px;
+}
+
+.checkout-btn {
+  margin-top: 22px;
+  padding: 14px 30px;
+  background-color: #e23744;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.checkout-bill-summary {
+  border-top: 1px dashed #ddd;
+  margin-top: 8px;
+  padding-top: 18px;
+  font-size: 16px;
+}
+
+.checkout-bill-summary > div {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 3px;
+}
+
+.checkout-bill-total {
+  font-weight: 700;
+  font-size: 18px;
+  margin-top: 8px;
+}
+
+.checkout-input {
+  width: 100%;
+  padding: 12px 13px;
+  font-size: 16px;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  border: 1px solid #bbb;
+  background: #f7f8fa;
+  outline: none;
+}
+
+.checkout-city-pincode {
+  display: flex;
+  gap: 10px;
+}
+
+.small-input {
+  max-width: 50%;
+}
+
+.checkout-payment-methods {
+  display: flex;
+  gap: 22px;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.checkout-place-order-btn {
+  width: 100%;
+  padding: 15px 0;
+  background: #e23744;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 1.2px;
+  transition: background-color 0.3s ease;
+}
+
+.checkout-place-order-btn:hover {
+  background: #b32032;
+}
+
+.checkout-success-container {
+  max-width: 680px;
+  margin: 54px auto;
+  padding: 30px 20px;
+  background: #f4fff7;
+  border-radius: 18px;
+  text-align: center;
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+.checkout-success-container h2 {
+  color: #43a047;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.checkout-success-container a {
+  color: #e23744;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.checkout-payment-page {
+  max-width: 680px;
+  margin: 54px auto;
+  padding: 20px;
+  background: white;
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.checkout-payment-page h2 {
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.checkout-payment-page p {
+  font-size: 16px;
+  color: #333;
+}
+
+.checkout-payment-page .checkout-btn {
+  margin-top: 24px;
+}
+
+.input-error {
+  border-color: #e23744 !important;
+}
+
+.error-msg {
+  color: #e23744;
+  font-size: 13px;
+  margin: -12px 0 8px 4px;
+  font-weight: 600;
+}

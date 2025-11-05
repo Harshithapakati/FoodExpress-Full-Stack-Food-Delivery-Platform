@@ -24,7 +24,24 @@ connectDB();
 
 // Security: Configure CORS properly
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : 'http://localhost:3002',
+  origin: function (origin, callback) {
+    // In development, allow all localhost origins
+    if (process.env.NODE_ENV !== 'production') {
+      if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    } else {
+      // In production, only allow the specified frontend URL
+      const allowedOrigin = process.env.FRONTEND_URL;
+      if (origin === allowedOrigin) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
+  },
   credentials: true
 }));
 
@@ -42,6 +59,11 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/restaurants', require('./routes/restaurants'));
+app.use('/api/menu', require('./routes/menu'));
+app.use('/api/cart', require('./routes/cart'));
+app.use('/api/orders', require('./routes/orders'));
+
 
 // Health check
 app.get('/', (req, res) => res.send('API running!'));
@@ -58,12 +80,7 @@ app.listen(PORT, () => {
   console.log(`🔐 JWT Secret: ${process.env.JWT_SECRET ? 'Set' : 'Not set'}`);
 });
 
-// const mongoose = require('mongoose');
 
-// mongoose.connection.on('connected', async () => {
-//   console.log('Connected DB Name:', mongoose.connection.name);
-//   console.log('Collections:', await mongoose.connection.db.listCollections().toArray());
-// });
 
 
 
