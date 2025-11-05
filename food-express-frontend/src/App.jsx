@@ -6,6 +6,7 @@ import ForgotPassword from './components/ForgotPassword';
 import BrowseRestaurants from './components/BrowseRestaurants';
 import ViewMenu from './components/ViewMenu';
 import CheckoutPage from './components/CheckoutPage';
+import OrderHistory from './components/OrderHistory';
 import './App.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="/browse" element={<BrowseRestaurants />} />
           <Route path="/menu" element={<ViewMenu />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/order-history" element={<OrderHistory />} />
         </Routes>
       </div>
     </Router>

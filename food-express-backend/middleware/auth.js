@@ -7,11 +7,16 @@ const authenticate = (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Access denied. No token provided.' });
     }
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    // Normalize token payload to provide both `id` and `userId` fields
+    req.user = {
+      ...decoded,
+      id: decoded.id || decoded.userId,
+      userId: decoded.userId || decoded.id,
+    };
     next();
   } catch (error) {
     res.status(401).json({ success: false, message: 'Invalid token' });
   }
 };
 
-module.exports = { authenticate };
+module.exports = authenticate ;

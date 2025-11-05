@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './BrowseRestaurants.css';
 import CartModal from './CartModal';
+import { Link } from "react-router-dom";
 
 function BrowseRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
@@ -143,6 +144,9 @@ function BrowseRestaurants() {
                 <button className="cart-btn" onClick={handleCartClick}>
                   🛒 Cart {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
                 </button>
+                <Link to="/order-history" className="order-history-btn" >
+                Order History
+                </Link>
                 <div className="user-menu">
                   <span className="user-name">Hi, {user.name || user.email}</span>
                   <button className="logout-btn" onClick={handleLogout}>Logout</button>

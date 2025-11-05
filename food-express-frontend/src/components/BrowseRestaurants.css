@@ -434,3 +434,25 @@ body {
     gap: 8px;
   }
 }
+
+
+.order-history-btn {
+  position: relative;
+  background: #fff;
+  color: #e23744;
+  border: 2px solid #e23744;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none; /* removes underline */
+  display: inline-block; /* ensures proper button layout */
+}
+
+.order-history-btn:hover {
+  background: #e23744;
+  color: #fff;
+  text-decoration: none; /* ensures no underline on hover */
+}

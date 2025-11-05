@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Cart = require('../models/Cart');
-const { authenticate } = require('../middleware/auth');
+const  authenticate  = require('../middleware/auth');
 
 // Get cart for logged-in user
 router.get('/', authenticate, async (req, res) => {

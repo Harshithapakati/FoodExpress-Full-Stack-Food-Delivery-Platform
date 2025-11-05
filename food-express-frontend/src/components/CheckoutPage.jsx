@@ -58,23 +58,52 @@ export default function CheckoutPage() {
     }
     if (!validate()) return;
 
-    // Your order placement API logic here
+    const token = localStorage.getItem("token");
 
-    // Then clear cart:
+    const orderPayload = {
+      restaurantName: restaurantInfo?.name || "",
+      items: cartItems.map(item => ({
+        name: item.name,
+        price: item.price,
+        quantity: item.qty,
+        image: item.img
+      })),
+      deliveryAddress: `${address.house}, ${address.street}, ${address.city} - ${address.pincode}`,
+      paymentMethod: payMethod,
+      totalAmount: subtotal + delivery + taxes
+    };
+
+    // Debugging logs: show token and exact payload sent
+    console.log('Placing order. Token present:', !!token);
+    console.log('Order payload about to be sent:', orderPayload);
+
     try {
-      const token = localStorage.getItem("token");
+      // Place order
+      const orderRes = await fetch("http://localhost:5000/api/orders/place", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(orderPayload)
+      });
+      const orderData = await orderRes.json();
+      if (!orderData.success) throw new Error("Order placement failed");
+
+      // Clear cart
       await fetch("http://localhost:5000/api/cart/clear", {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });
-      setCartItems([]); // Clear context cart state
+      setCartItems([]);
+
       if (payMethod === "card") setPaymentStarted(true);
       else setPlaced(true);
-    } catch {
-      if (payMethod === "card") setPaymentStarted(true);
-      else setPlaced(true);
+    } catch (error) {
+      alert("Order failed: " + error.message);
     }
   };
+
 
   const handleAddMore = () => {
     if (cartItems.length === 0) {
