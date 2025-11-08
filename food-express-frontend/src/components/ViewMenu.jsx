@@ -27,7 +27,7 @@ function ViewMenu() {
 
   const fetchMenu = async (restaurantId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/menu/${restaurantId}`);
+      const response = await fetch(`http://localhost:5001/api/menu/${restaurantId}`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
@@ -59,7 +59,7 @@ function ViewMenu() {
 
 
     try {
-      const response = await fetch('http://localhost:5000/api/cart/add', {
+      const response = await fetch('http://localhost:5001/api/cart/add', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

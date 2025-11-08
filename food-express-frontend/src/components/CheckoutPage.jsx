@@ -79,7 +79,7 @@ export default function CheckoutPage() {
 
     try {
       // Place order
-      const orderRes = await fetch("http://localhost:5000/api/orders/place", {
+      const orderRes = await fetch("http://localhost:5001/api/orders/place", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -91,7 +91,7 @@ export default function CheckoutPage() {
       if (!orderData.success) throw new Error("Order placement failed");
 
       // Clear cart
-      await fetch("http://localhost:5000/api/cart/clear", {
+      await fetch("http://localhost:5001/api/cart/clear", {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` }
       });

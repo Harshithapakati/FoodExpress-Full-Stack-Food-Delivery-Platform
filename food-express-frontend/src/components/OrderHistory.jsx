@@ -13,7 +13,7 @@ function OrderHistory() {
 
   const fetchOrderHistory = async () => {
     const token = localStorage.getItem('token');
-    const res = await fetch('http://localhost:5000/api/orders/history', {
+    const res = await fetch('http://localhost:5001/api/orders/history', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();

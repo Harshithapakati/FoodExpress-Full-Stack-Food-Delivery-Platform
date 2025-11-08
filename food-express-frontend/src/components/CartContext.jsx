@@ -10,7 +10,7 @@ export function CartProvider({ children }) {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      const res = await fetch("http://localhost:5000/api/cart", {
+      const res = await fetch("http://localhost:5001/api/cart", {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -48,7 +48,7 @@ export function CartProvider({ children }) {
       }
       const token = localStorage.getItem("token");
       if (!token) return;
-      await fetch(`http://localhost:5000/api/cart/update/${itemId}`, {
+      await fetch(`http://localhost:5001/api/cart/update/${itemId}`, {
         method: "PUT",
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export function CartProvider({ children }) {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      await fetch(`http://localhost:5000/api/cart/remove/${itemId}`, {
+      await fetch(`http://localhost:5001/api/cart/remove/${itemId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`
