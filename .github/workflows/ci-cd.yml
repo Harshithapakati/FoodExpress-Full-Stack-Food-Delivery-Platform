@@ -2,81 +2,54 @@ name: CI-CD Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, feature/**]
   pull_request:
     branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # ---- Backend Section ----
+      # ---------- Backend ----------
       - name: Install backend dependencies
         working-directory: ./food-express-backend
-        run: |
-          if [ -f package.json ]; then
-            npm install
-          else
-            echo "No package.json found in backend"
-          fi
+        run: npm install
 
-      - name: Run backend tests
+      - name: Run backend tests with coverage
         working-directory: ./food-express-backend
         run: |
-          if [ -f package.json ]; then
-            npm test || echo "No tests configured"
-          else
-            echo "No backend found for testing"
-          fi
+          echo "Running Jest tests + coverage"
+          npm test -- --coverage --runInBand
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
-      - name: Security audit (backend)
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: food-express-backend/coverage/
+
+      - name: Run ESLint (backend)
         working-directory: ./food-express-backend
         run: |
-          if [ -f package.json ]; then
-            npm audit --audit-level=high || true
-          else
-            echo "No backend found for security audit"
-          fi
+          echo "Running lint..."
+          npx eslint . --ext .js --max-warnings=10
+        continue-on-error: true
 
-      # ---- Frontend Section ----
+      # ---------- Frontend ----------
       - name: Install frontend dependencies
         working-directory: ./food-express-frontend
-        run: |
-          if [ -f package.json ]; then
-            npm install
-          else
-            echo "No package.json found in frontend"
-          fi
+        run: npm install
 
       - name: Build frontend
         working-directory: ./food-express-frontend
-        run: |
-          if [ -f package.json ]; then
-            npm run build --if-present || echo "No build script found"
-          else
-            echo "No frontend found for building"
-          fi
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Deploy to staging
-        run: echo "Deploying to staging environment..."
-
-      - name: Run integration tests
-        run: echo "Running integration tests..."
-
-      - name: Deploy to production
-        run: echo "Deploying to production environment..."
+        run: npm run build --if-present
