@@ -14,40 +14,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      # --- Backend Setup ---
+      - name: Setup Node.js for Backend
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+        working-directory: ./food-express-backend
 
-      # ---- Backend Section ----
-      - name: Install backend dependencies
-        working-directory: food-express-backend
+      - name: Install Backend Dependencies
+        working-directory: ./food-express-backend
         run: |
           echo "Installing backend dependencies..."
           npm install
 
-      - name: Run backend tests
-        working-directory: food-express-backend
+      - name: Run Backend Tests
+        working-directory: ./food-express-backend
         run: |
           echo "Running backend tests..."
-          npm test || echo "No tests found or Jest not configured"
+          npm test || echo "No tests configured"
 
-      - name: Security audit (backend)
-        working-directory: food-express-backend
+      - name: Security Audit (Backend)
+        working-directory: ./food-express-backend
         run: |
           echo "Running security audit..."
           npm audit --audit-level=high || true
 
-      # ---- Frontend Section ----
-      - name: Install frontend dependencies
-        working-directory: food-express-frontend
+      # --- Frontend Setup ---
+      - name: Setup Node.js for Frontend
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+        working-directory: ./food-express-frontend
+
+      - name: Install Frontend Dependencies
+        working-directory: ./food-express-frontend
         run: |
           echo "Installing frontend dependencies..."
           npm install
 
-      - name: Build frontend
-        working-directory: food-express-frontend
+      - name: Build Frontend
+        working-directory: ./food-express-frontend
         run: |
           echo "Building frontend..."
           npm run build --if-present || echo "No build script found"
