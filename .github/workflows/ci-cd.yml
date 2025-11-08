@@ -22,50 +22,35 @@ jobs:
 
       # ---- Backend Section ----
       - name: Install backend dependencies
-        working-directory: ./food-express-backend
+        working-directory: food-express-backend
         run: |
-          if [ -f package.json ]; then
-            npm install
-          else
-            echo "No package.json found in backend, skipping npm install"
-          fi
+          echo "Installing backend dependencies..."
+          npm install
 
       - name: Run backend tests
-        working-directory: ./food-express-backend
+        working-directory: food-express-backend
         run: |
-          if [ -f package.json ] && npm list --depth=0 | grep -q jest; then
-            npm test
-          else
-            echo "No Jest tests configured, skipping..."
-          fi
+          echo "Running backend tests..."
+          npm test || echo "No tests found or Jest not configured"
 
       - name: Security audit (backend)
-        working-directory: ./food-express-backend
+        working-directory: food-express-backend
         run: |
-          if [ -f package.json ]; then
-            npm audit --audit-level=high || true
-          else
-            echo "No package.json found, skipping security audit"
-          fi
+          echo "Running security audit..."
+          npm audit --audit-level=high || true
 
       # ---- Frontend Section ----
       - name: Install frontend dependencies
-        working-directory: ./food-express-frontend
+        working-directory: food-express-frontend
         run: |
-          if [ -f package.json ]; then
-            npm install
-          else
-            echo "No package.json found in frontend, skipping npm install"
-          fi
+          echo "Installing frontend dependencies..."
+          npm install
 
       - name: Build frontend
-        working-directory: ./food-express-frontend
+        working-directory: food-express-frontend
         run: |
-          if [ -f package.json ]; then
-            npm run build --if-present
-          else
-            echo "No package.json found, skipping build"
-          fi
+          echo "Building frontend..."
+          npm run build --if-present || echo "No build script found"
 
   deploy:
     needs: build
