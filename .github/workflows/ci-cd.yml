@@ -2,9 +2,9 @@ name: CI-CD Pipeline (Sprint 1 Completion)
 
 on:
   push:
-    branches: [main, develop, feature/**]
+    branches: [ main, develop ]
   pull_request:
-    branches: [main]
+    branches: [ main, develop ]
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- 2. Setup Node for both backend & frontend ---
+      # --- 2. Setup Node.js ---
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -28,14 +28,14 @@ jobs:
 
       - name: Run backend tests with coverage
         working-directory: ./food-express-backend
-        run: |
-          echo "Running backend tests + coverage"
-          npm test -- --coverage --runInBand || echo "Some tests failed or coverage missing"
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        run: |
+          echo "🧪 Running backend tests + coverage..."
+          npm test -- --coverage --runInBand || echo "Some tests failed or coverage missing"
 
       - name: Upload backend coverage report
         if: always()
@@ -48,13 +48,13 @@ jobs:
       - name: Run ESLint (backend)
         working-directory: ./food-express-backend
         run: |
-          echo "Running ESLint for backend..."
-          npx eslint . --ext .js --max-warnings=10 || true
+          echo "🔍 Running ESLint for backend..."
+          npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=10 || true
 
       - name: Security audit (backend)
         working-directory: ./food-express-backend
         run: |
-          echo "Running npm security audit..."
+          echo "🛡️ Running npm security audit..."
           npm audit --audit-level=high || true
 
       # ---------- FRONTEND ----------
@@ -65,16 +65,16 @@ jobs:
       - name: Run ESLint (frontend)
         working-directory: ./food-express-frontend
         run: |
-          echo "Running ESLint for frontend..."
-          npx eslint . --ext .js --max-warnings=10 || true
+          echo "🔍 Running ESLint for frontend..."
+          npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=10 || true
 
       - name: Build frontend
         working-directory: ./food-express-frontend
         run: |
-          echo "Building frontend..."
+          echo "🏗️ Building frontend..."
           npm run build --if-present || echo "No build script found"
 
-  # ---------- OPTIONAL DEPLOY STUB ----------
+  # ---------- OPTIONAL DEPLOY STUB (for Sprint 2) ----------
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -85,7 +85,7 @@ jobs:
         run: echo "🚀 Deploying to staging environment..."
 
       - name: Integration tests placeholder
-        run: echo "🧪 Running integration tests..."
+        run: echo "🧩 Running integration tests..."
 
       - name: Deploy to production (placeholder)
         run: echo "🌍 Deploying to production environment..."
