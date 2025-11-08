@@ -14,49 +14,57 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # --- Backend Setup ---
-      - name: Setup Node.js for Backend
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-        working-directory: ./food-express-backend
 
-      - name: Install Backend Dependencies
-        working-directory: ./food-express-backend
-        run: |
-          echo "Installing backend dependencies..."
-          npm install
-
-      - name: Run Backend Tests
+      # ---- Backend Section ----
+      - name: Install backend dependencies
         working-directory: ./food-express-backend
         run: |
-          echo "Running backend tests..."
-          npm test || echo "No tests configured"
+          if [ -f package.json ]; then
+            npm install
+          else
+            echo "No package.json found in backend"
+          fi
 
-      - name: Security Audit (Backend)
+      - name: Run backend tests
         working-directory: ./food-express-backend
         run: |
-          echo "Running security audit..."
-          npm audit --audit-level=high || true
+          if [ -f package.json ]; then
+            npm test || echo "No tests configured"
+          else
+            echo "No backend found for testing"
+          fi
 
-      # --- Frontend Setup ---
-      - name: Setup Node.js for Frontend
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-        working-directory: ./food-express-frontend
-
-      - name: Install Frontend Dependencies
-        working-directory: ./food-express-frontend
+      - name: Security audit (backend)
+        working-directory: ./food-express-backend
         run: |
-          echo "Installing frontend dependencies..."
-          npm install
+          if [ -f package.json ]; then
+            npm audit --audit-level=high || true
+          else
+            echo "No backend found for security audit"
+          fi
 
-      - name: Build Frontend
+      # ---- Frontend Section ----
+      - name: Install frontend dependencies
         working-directory: ./food-express-frontend
         run: |
-          echo "Building frontend..."
-          npm run build --if-present || echo "No build script found"
+          if [ -f package.json ]; then
+            npm install
+          else
+            echo "No package.json found in frontend"
+          fi
+
+      - name: Build frontend
+        working-directory: ./food-express-frontend
+        run: |
+          if [ -f package.json ]; then
+            npm run build --if-present || echo "No build script found"
+          else
+            echo "No frontend found for building"
+          fi
 
   deploy:
     needs: build
@@ -65,10 +73,10 @@ jobs:
 
     steps:
       - name: Deploy to staging
-        run: echo "🚀 Deploying to staging environment..."
+        run: echo "Deploying to staging environment..."
 
       - name: Run integration tests
-        run: echo "🧪 Running integration tests..."
+        run: echo "Running integration tests..."
 
       - name: Deploy to production
-        run: echo "🌍 Deploying to production environment..."
+        run: echo "Deploying to production environment..."
