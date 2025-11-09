@@ -246,8 +246,51 @@ export default function CheckoutPage() {
         const rzp = new window.Razorpay(options);
         rzp.open();
 
-        rzp.on("payment.failed", function (response) {
-          alert("Payment failed: " + (response.error.description || "Unknown error"));
+        rzp.on("payment.failed", async function (response) {
+          console.error("Payment failed:", response.error);
+          
+          // Create pending order on payment failure
+          try {
+            const failedOrderRes = await fetch("http://localhost:5000/api/payment/failed", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: orderData.order_id,
+                items: cartItems.map(item => ({
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.qty,
+                  image: item.img
+                })),
+                totalAmount: totalAmount,
+                restaurantName: restaurantInfo?.name || "",
+                deliveryAddress: `${address.house}, ${address.street}, ${address.city} - ${address.pincode}`,
+                paymentMethod: "card"
+              })
+            });
+
+            const failedOrderData = await failedOrderRes.json();
+            
+            if (failedOrderData.success) {
+              // Clear cart even on failure
+              await fetch("http://localhost:5000/api/cart/clear", {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              setCartItems([]);
+              
+              alert("Payment failed: " + (response.error.description || "Unknown error") + "\nYour order has been saved. You can retry payment from Order History.");
+              navigate("/order-history");
+            } else {
+              alert("Payment failed: " + (response.error.description || "Unknown error"));
+            }
+          } catch (error) {
+            console.error("Failed order creation error:", error);
+            alert("Payment failed: " + (response.error.description || "Unknown error"));
+          }
         });
 
       } catch (error) {
