@@ -71,7 +71,7 @@ router.post('/:orderId/accept', auth, requireRole('partner'), async (req, res) =
     order.tracking.accepted = new Date();
     await order.save();
 
-  // notify customer
+  // notify user
   await notifyUserForOrder(order, 'Order Accepted', `Your order ${order._id} has been accepted by a delivery partner.`);
 
     res.json({ success: true, order });
@@ -100,7 +100,7 @@ router.put('/:orderId/status', auth, requireRole('partner'), async (req, res) =>
 
     await order.save();
 
-    // notify customer
+  // notify user
     // Compose readable status and include restaurant name for reached_restaurant
     let human = status.replace(/_/g, ' ');
     let body = `Your order ${order._id} status: ${human}`;

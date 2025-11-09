@@ -7,7 +7,6 @@ const { initFirebase, admin } = require('../firebase/admin');
 const { sendOrderConfirmation } = require('../utils/emailService');
 
 // Place a new order
-// NOTE: Order creation is now handled in /api/payment/verify after successful payment
 router.post('/place', auth, async (req, res) => {
   try {
     console.log('Order payload received:', JSON.stringify(req.body));
@@ -47,7 +46,6 @@ router.post('/place', auth, async (req, res) => {
       await order.save();
       console.log('Order saved successfully, id:', order._id);
 
-      // send order confirmation email
       try {
         const user = await User.findById(order.userId);
         if (user && user.email) {
@@ -59,7 +57,6 @@ router.post('/place', auth, async (req, res) => {
           console.warn('Firebase init skipped or failed:', e.message);
         }
 
-        // send notification
         try {
           if (user && user.fcmToken) {
             const message = {
@@ -80,8 +77,6 @@ router.post('/place', auth, async (req, res) => {
           }
         } catch (fcmErr) {
           console.error('FCM send error:', fcmErr);
-
-          // cleanup invalid token
           if (
             fcmErr?.errorInfo?.code === 'messaging/registration-token-not-registered' &&
             user
@@ -148,36 +143,41 @@ router.put('/:id/status', auth, async (req, res) => {
       console.warn('Firebase init skipped or failed:', e.message);
     }
 
+    // --- merged notification logic from both branches ---
     const user = await User.findById(order.userId);
 
     if (user && user.fcmToken) {
-      console.log('Found user token for notifications:', user.fcmToken?.substring(0, 8) + '...');
+      console.log(
+        'Found user token for notifications:',
+        user.fcmToken ? user.fcmToken.substring(0, 8) + '...' : 'none'
+      );
 
-      // ✅ Merge of both branches' message logic
-      let title, body;
+      let notificationPayload = {};
+      const data = {
+        orderId: order._id.toString(),
+        status,
+        url: `/order-history?orderId=${order._id}`
+      };
 
       if (status === 'reached_restaurant') {
-        title = `Reached ${order.restaurantName}`;
-        body = `Your order ${order._id} has reached ${order.restaurantName}.`;
+        const restaurantName = order.restaurantName || '';
+        notificationPayload = {
+          title: `Reached ${restaurantName}`,
+          body: `Your order ${order._id} has reached ${restaurantName}.`
+        };
+        data.reached_restaurant = restaurantName;
       } else {
-        title = `Order ${status}`;
-        body = `Your order ${order._id} status changed to ${status}`;
+        notificationPayload = {
+          title: `Order ${status}`,
+          body: `Your order ${order._id} status changed to ${status}`
+        };
       }
-
-      const payload = {
-        notification: { title, body },
-        data: {
-          orderId: order._id.toString(),
-          status,
-          url: `/order-history?orderId=${order._id}`
-        }
-      };
 
       try {
         const message = {
           token: user.fcmToken,
-          notification: payload.notification,
-          data: payload.data
+          notification: notificationPayload,
+          data
         };
 
         const resp = await admin.messaging().send(message);
@@ -196,7 +196,7 @@ router.put('/:id/status', auth, async (req, res) => {
       }
     }
 
-    // If confirmed → Send email too
+    // send email when confirmed
     try {
       if (order.status?.toLowerCase() === 'confirmed') {
         if (user && user.email) {
