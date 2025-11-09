@@ -79,27 +79,15 @@ function showInAppToast(title, message, timeout = 5000) {
     toast.appendChild(b);
 
     // remove on click
-    // click navigates to URL if present on dataset, otherwise just remove
     toast.addEventListener('click', () => {
-      try {
-        const target = toast.dataset && toast.dataset.url;
-        if (target) {
-          // If it's an absolute or relative path, open in same tab
-          window.location.href = target;
-          return;
-        }
-      } catch (e) {}
       toast.remove();
     });
 
     container.appendChild(toast);
 
-    // keep toast longer so users have time to notice; if timeout is 0, don't auto-remove
-    if (timeout > 0) {
-      setTimeout(() => {
-        try { toast.remove(); } catch (e) { }
-      }, timeout);
-    }
+    setTimeout(() => {
+      try { toast.remove(); } catch (e) { }
+    }, timeout);
   } catch (e) {
     console.warn('Failed to show in-app toast:', e);
   }
@@ -111,12 +99,7 @@ try {
   onForegroundMessage((payload) => {
     const title = payload.notification?.title || payload.data?.title || 'FoodExpress';
     const body = payload.notification?.body || payload.data?.body || '';
-    // log for debugging
-    console.log('Foreground message payload received (page):', payload);
-    // if payload contains a url in data, pass it so the toast can navigate
-    const url = payload.data?.url || payload.data?.click_action || null;
-    const t = payload.notification?.title || payload.data?.title || 'FoodExpress';
-    showInAppToast(t, body || 'You have a new notification', 15000);
+    showInAppToast(title, body || 'You have a new notification');
   });
 } catch (e) {
   // ignore if messaging not initialized
@@ -130,20 +113,10 @@ if ('serviceWorker' in navigator) {
       if (!data) return;
       if (data.type === 'FCM_BACKGROUND_MESSAGE') {
         const payload = data.payload || {};
-        console.log('SW -> page FCM_BACKGROUND_MESSAGE received:', payload);
         const title = payload.notification?.title || payload.data?.title || 'FoodExpress';
         const body = payload.notification?.body || payload.data?.body || '';
-        const url = payload.data?.url || payload.data?.click_action || null;
-        // create toast and attach url to dataset so clicking navigates
-        const result = showInAppToast(title, body || 'You have a new notification', 15000);
-        try {
-          // set data-url attribute for navigation when clicked
-          const container = document.getElementById('fe-toast-container');
-          if (container && container.lastChild && url) {
-            container.lastChild.dataset = container.lastChild.dataset || {};
-            container.lastChild.dataset.url = url;
-          }
-        } catch (e) { console.warn('Failed to attach url to toast', e); }
+        // show an in-app toast so the user sees the message even if system notifications are suppressed
+        showInAppToast(title, body || 'You have a new notification');
       }
     } catch (err) {
       // ignore message handling errors
