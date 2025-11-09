@@ -58,6 +58,7 @@ export default function CheckoutPage() {
     }
     if (!validate()) return;
 
+<<<<<<< ours
     const token = localStorage.getItem('token');
 
     const orderPayload = {
@@ -101,6 +102,159 @@ export default function CheckoutPage() {
       else setPlaced(true);
     } catch (error) {
       alert('Order failed: ' + error.message);
+=======
+    const token = localStorage.getItem("token");
+    const totalAmount = subtotal + delivery + taxes;
+
+    // For cash on delivery, use the old flow
+    if (payMethod === "cash") {
+      const orderPayload = {
+        restaurantName: restaurantInfo?.name || "",
+        items: cartItems.map(item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.qty,
+          image: item.img
+        })),
+        deliveryAddress: `${address.house}, ${address.street}, ${address.city} - ${address.pincode}`,
+        paymentMethod: payMethod,
+        totalAmount: totalAmount
+      };
+
+      try {
+        const orderRes = await fetch("http://localhost:5000/api/orders/place", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(orderPayload)
+        });
+        const orderData = await orderRes.json();
+        if (!orderData.success) throw new Error(orderData.error || "Order placement failed");
+
+        // Clear cart
+        await fetch("http://localhost:5000/api/cart/clear", {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setCartItems([]);
+        setPlaced(true);
+      } catch (error) {
+        alert("Order failed: " + error.message);
+      }
+      return;
+    }
+
+  // For card payments, use Razorpay checkout
+  if (payMethod === "card") {
+      try {
+        // Step 1: Create Razorpay order
+        const orderRes = await fetch("http://localhost:5000/api/payment/order", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ amount: totalAmount })
+        });
+
+        const orderData = await orderRes.json();
+        if (!orderData.success) {
+          throw new Error(orderData.error || "Failed to create payment order");
+        }
+
+        // Step 2: Open Razorpay checkout
+        // Razorpay Sandbox Test Card Details:
+        // Success: 4111 1111 1111 1111 | Expiry: any future MM/YY | CVV: 123 | OTP: any
+        // Failure: 4000 0000 0000 0002 | Expiry: any future MM/YY | CVV: 123 | OTP: any
+        // Use these only in Test Mode. Do NOT store real card data.
+        const options = {
+          key: orderData.key_id,
+          amount: orderData.amount,
+          currency: orderData.currency,
+          order_id: orderData.order_id,
+          name: "FoodExpress",
+          description: `Order from ${restaurantInfo?.name || "Restaurant"}`,
+          handler: async function (response) {
+            // Payment successful - verify on server
+            try {
+              const verifyRes = await fetch("http://localhost:5000/api/payment/verify", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  items: cartItems.map(item => ({
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.qty,
+                    image: item.img
+                  })),
+                  totalAmount: totalAmount,
+                  restaurantName: restaurantInfo?.name || "",
+                  deliveryAddress: `${address.house}, ${address.street}, ${address.city} - ${address.pincode}`,
+                  paymentMethod: "card"
+                })
+              });
+
+              const verifyData = await verifyRes.json();
+              
+              if (verifyData.success) {
+                // Clear cart
+                await fetch("http://localhost:5000/api/cart/clear", {
+                  method: "DELETE",
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                setCartItems([]);
+                
+                // Show success message and redirect to order history
+                alert("Payment successful! Order placed successfully.");
+                navigate("/order-history");
+              } else {
+                alert("Payment verification failed: " + (verifyData.error || "Unknown error"));
+              }
+            } catch (error) {
+              console.error("Payment verification error:", error);
+              alert("Payment verification failed: " + error.message);
+            }
+          },
+          prefill: {
+            name: address.name,
+            contact: address.phone,
+            email: JSON.parse(localStorage.getItem("user") || "{}").email || ""
+          },
+          theme: {
+            color: "#e23744"
+          },
+          modal: {
+            ondismiss: function() {
+              // User closed the payment modal
+              console.log("Payment modal closed by user");
+            }
+          }
+        };
+
+        // Minimal method exposure: let Razorpay show default card flow.
+        // (Remove UPI completely as requested.)
+        options.method = { card: true };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+
+        rzp.on("payment.failed", function (response) {
+          alert("Payment failed: " + (response.error.description || "Unknown error"));
+        });
+
+      } catch (error) {
+        console.error("Payment initiation error:", error);
+        alert("Payment failed: " + error.message);
+      }
+>>>>>>> theirs
     }
   };
 
@@ -200,8 +354,13 @@ export default function CheckoutPage() {
           </div>
           <h2>Payment Method</h2>
           <div className="checkout-payment-methods">
+<<<<<<< ours
             <label><input type="radio" name="pay" value="cash" checked={payMethod === 'cash'} onChange={() => setPayMethod('cash')} /> Cash on Delivery</label>
             <label><input type="radio" name="pay" value="card" checked={payMethod === 'card'} onChange={() => setPayMethod('card')} /> Card/UPI</label>
+=======
+            <label><input type="radio" name="pay" value="cash" checked={payMethod === "cash"} onChange={() => setPayMethod("cash")} /> Cash on Delivery</label>
+            <label><input type="radio" name="pay" value="card" checked={payMethod === "card"} onChange={() => setPayMethod("card")} /> Card</label>
+>>>>>>> theirs
           </div>
           <button type="submit" className="checkout-place-order-btn">Place Order</button>
         </form>

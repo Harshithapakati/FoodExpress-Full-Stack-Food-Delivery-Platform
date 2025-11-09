@@ -18,9 +18,16 @@ if (!process.env.MONGO_URI) {
 const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
+const Razorpay = require('razorpay');
 
 const app = express();
 connectDB();
+
+// Initialize Razorpay instance
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 // Security: Configure CORS properly
 app.use(cors({
@@ -63,6 +70,7 @@ app.use('/api/restaurants', require('./routes/restaurants'));
 app.use('/api/menu', require('./routes/menu'));
 app.use('/api/cart', require('./routes/cart'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/payment', require('./routes/payment'));
 
 
 // Health check
