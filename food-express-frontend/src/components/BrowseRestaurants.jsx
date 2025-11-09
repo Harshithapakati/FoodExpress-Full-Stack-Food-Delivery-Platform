@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './BrowseRestaurants.css';
 import CartModal from './CartModal';
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
 function BrowseRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
@@ -46,7 +46,7 @@ function BrowseRestaurants() {
 
   const fetchCartCount = async (token) => {
     try {
-      const response = await fetch('http://localhost:5000/api/cart', {
+      const response = await fetch('http://localhost:5001/api/cart', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -63,7 +63,7 @@ function BrowseRestaurants() {
 
   const fetchRestaurants = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/restaurants');
+      const response = await fetch('http://localhost:5001/api/restaurants');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setRestaurants(data.restaurants);

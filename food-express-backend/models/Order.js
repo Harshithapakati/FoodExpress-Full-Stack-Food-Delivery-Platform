@@ -11,7 +11,7 @@ const OrderSchema = new mongoose.Schema({
   }],
   deliveryAddress: String,
   paymentMethod: String,
-  status: { type: String, default: "Placed" },
+  status: { type: String, default: 'Placed' },
   totalAmount: Number,
   createdAt: { type: Date, default: Date.now }
 });
