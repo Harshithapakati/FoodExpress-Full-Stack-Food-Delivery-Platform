@@ -11,8 +11,9 @@ const OrderSchema = new mongoose.Schema({
   }],
   deliveryAddress: String,
   paymentMethod: String,
-  status: { type: String, default: "Placed" },
+  status: { type: String, default: "Placed" }, // "Placed", "Pending Payment", "Delivered", "Cancelled"
   totalAmount: Number,
+  razorpayOrderId: String, // Store Razorpay order ID for tracking
   createdAt: { type: Date, default: Date.now }
 });
 
