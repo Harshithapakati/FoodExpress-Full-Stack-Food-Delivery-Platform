@@ -1,16 +1,35 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './OrderHistory.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function OrderHistory() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const listRef = useRef(null);
+  const location = useLocation();
   const [retrying, setRetrying] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchOrderHistory();
   }, []);
+
+  useEffect(() => {
+    // If query param orderId present, highlight that order after fetch
+    const params = new URLSearchParams(location.search);
+    const q = params.get('orderId');
+    if (q && orders && orders.length > 0) {
+      // find element with data-orderid
+      setTimeout(() => {
+        const el = document.querySelector(`[data-orderid=\"${q}\"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.style.boxShadow = '0 0 0 3px rgba(0,150,136,0.18)';
+          setTimeout(() => { el.style.boxShadow = ''; }, 5000);
+        }
+      }, 200);
+    }
+  }, [location.search, orders]);
 
   const fetchOrderHistory = async () => {
     setLoading(true);
@@ -132,7 +151,7 @@ function OrderHistory() {
         <p>No orders yet.</p>
       ) : (
         orders.map(order => (
-          <div key={order._id} className="order-card">
+          <div key={order._id} data-orderid={order._id} className="order-card">
             <b>Date:</b> {new Date(order.createdAt).toLocaleString()}<br />
             <b>Restaurant:</b> {order.restaurantName}<br />
             <b>Status:</b> <span className={`order-status ${order.status.toLowerCase().replace(' ', '-')}`}>{order.status}</span><br />

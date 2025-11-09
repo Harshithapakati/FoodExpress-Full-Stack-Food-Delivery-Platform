@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
 const auth = require('../middleware/auth');
+const User = require('../models/User');
+const { initFirebase, admin } = require('../firebase/admin');
+const { sendOrderConfirmation } = require('../utils/emailService');
 
 // Place a new order
 // NOTE: Order creation is now handled in /api/payment/verify after successful payment
@@ -49,6 +52,57 @@ router.post('/place', auth, async (req, res) => {
     try {
       await order.save();
       console.log('Order saved successfully (COD), id:', order._id);
+      // send order confirmation email to user (best-effort)
+      try {
+        const user = await User.findById(order.userId);
+        if (user && user.email) {
+          await sendOrderConfirmation(user.email, order);
+          console.log('Order confirmation email queued/sent to', user.email);
+        } else {
+          console.log('No user email found; skipping order confirmation email');
+        }
+        // initialize firebase admin and send an immediate FCM push for order placement
+        try { initFirebase(); } catch (e) { console.warn('Firebase init skipped or failed:', e.message); }
+        try {
+          if (user && user.fcmToken) {
+            const placementPayload = {
+              notification: {
+                title: 'Order Placed',
+                body: `Your order ${order._id} has been placed successfully.`
+              },
+              data: {
+                orderId: order._id.toString(),
+                status: order.status || 'received',
+                // open the order-history route and optionally include orderId as query
+                url: `/order-history?orderId=${order._id}`
+              }
+            };
+            const message = {
+              token: user.fcmToken,
+              notification: placementPayload.notification,
+              data: placementPayload.data
+            };
+            const sendResp = await admin.messaging().send(message);
+            console.log('Sent FCM order-placement messageId:', sendResp);
+          }
+        } catch (fcmErr) {
+          console.error('FCM send error on order placement (non-fatal):', fcmErr);
+          // If token is invalid or not registered, remove it from user's record to avoid future failures
+          try {
+            if (fcmErr && fcmErr.errorInfo && fcmErr.errorInfo.code === 'messaging/registration-token-not-registered') {
+              if (user) {
+                console.log('Removing invalid fcmToken for user:', user.id || user._id);
+                user.fcmToken = null;
+                await user.save();
+              }
+            }
+          } catch (cleanupErr) {
+            console.warn('Failed to cleanup invalid fcmToken:', cleanupErr);
+          }
+        }
+      } catch (emailErr) {
+        console.error('Failed to send order confirmation email (non-fatal):', emailErr);
+      }
       return res.json({ success: true, order });
     } catch (saveErr) {
       // Mongoose validation or DB error — return details to help debugging (safe for dev)
@@ -73,4 +127,85 @@ router.get('/history', auth, async (req, res) => {
   }
 });
 
-module.exports = router;
+// --- Additional route: update order status and notify user via FCM ---
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await Order.findById(id);
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    order.status = status;
+    await order.save();
+
+    // initialize firebase admin
+    try { initFirebase(); } catch (e) { console.warn('Firebase init skipped or failed:', e.message); }
+
+  // send notification to user if token exists
+    const user = await User.findById(order.userId);
+    if (user && user.fcmToken) {
+      console.log('Found user token for notifications:', user.fcmToken ? user.fcmToken.substring(0,8)+'...' : 'none');
+      // Customize notification text for certain statuses
+      let title;
+      let body;
+      if (status === 'reached_restaurant') {
+        title = `Reached ${order.restaurantName}`;
+        body = `Your order ${order._id} has reached ${order.restaurantName}.`;
+      } else {
+        title = `Order ${status}`;
+        body = `Your order ${order._id} status changed to ${status}`;
+      }
+      const payload = {
+        notification: {
+          title,
+          body
+        },
+        data: {
+          orderId: order._id.toString(),
+          status,
+          url: `/order-history?orderId=${order._id}`
+        }
+      };
+      try {
+        const message = {
+          token: user.fcmToken,
+          notification: payload.notification,
+          data: payload.data
+        };
+        const resp = await admin.messaging().send(message);
+        console.log('Sent FCM messageId:', resp);
+      } catch (err) {
+        console.error('FCM send error (full):', err);
+        try {
+          if (err && err.errorInfo && err.errorInfo.code === 'messaging/registration-token-not-registered') {
+            console.log('Removing invalid fcmToken for user after status update:', user.id || user._id);
+            user.fcmToken = null;
+            await user.save();
+          }
+        } catch (cleanupErr) {
+          console.warn('Failed to cleanup invalid fcmToken after status update:', cleanupErr);
+        }
+      }
+    }
+
+    // If status became 'confirmed', also send a confirmation email (best-effort)
+    try {
+      if (order.status && order.status.toLowerCase() === 'confirmed') {
+        if (user && user.email) {
+          await sendOrderConfirmation(user.email, order);
+          console.log('Order confirmation email (status update) queued/sent to', user.email);
+        }
+      }
+    } catch (emailErr) {
+      console.error('Failed to send order confirmation email on status update (non-fatal):', emailErr);
+    }
+
+    return res.json({ success: true, order });
+  } catch (error) {
+    console.error('Update status failed:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+  module.exports = router;

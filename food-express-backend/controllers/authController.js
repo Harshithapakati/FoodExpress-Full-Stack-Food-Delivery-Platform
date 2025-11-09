@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const { sendOTPEmail } = require('../utils/emailService');
+const { initFirebase, admin } = require('../firebase/admin');
 
 // Registration
 exports.register = async (req, res) => {
@@ -40,12 +41,45 @@ exports.login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ msg: 'Invalid email or password' });
 
+    // Include role in the token so frontend can detect partner/admin clients without extra requests
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '2h' }
     );
-    res.json({ token });
+    // Best-effort: send a welcome push notification if the user has a saved fcmToken
+    (async () => {
+      try {
+        try { initFirebase(); } catch (e) { console.warn('Firebase init skipped or failed:', e.message); }
+        if (user && user.fcmToken && admin && admin.messaging) {
+          const message = {
+            token: user.fcmToken,
+            notification: {
+              title: 'Welcome to FoodExpress!',
+              body: `Hi ${user.email.split('@')[0] || 'there'}, welcome back!` 
+            },
+            data: { event: 'welcome', userId: user.id }
+          };
+          admin.messaging().send(message).then(mid => console.log('Sent welcome FCM messageId:', mid)).catch(async (err) => {
+            console.warn('Welcome FCM error:', err);
+            try {
+              if (err && err.errorInfo && err.errorInfo.code === 'messaging/registration-token-not-registered') {
+                console.log('Removing invalid fcmToken for user on login:', user.id || user._id);
+                user.fcmToken = null;
+                await user.save();
+              }
+            } catch (cleanupErr) {
+              console.warn('Failed to cleanup invalid fcmToken on login:', cleanupErr);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to send welcome push (non-fatal):', err);
+      }
+    })();
+
+  // Return token and a small user object for immediate client-side use
+  res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
   } catch (err) {
     res.status(500).json({ msg: 'Server Error' });
   }

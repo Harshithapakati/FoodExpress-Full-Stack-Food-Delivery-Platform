@@ -23,6 +23,17 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // FCM device token for push notifications (optional)
+    fcmToken: {
+      type: String,
+      default: null,
+    },
+    // role: 'customer' | 'partner' | 'admin'
+    role: {
+      type: String,
+      enum: ['customer', 'partner', 'admin'],
+      default: 'customer'
+    },
   },
   { timestamps: true }
 );

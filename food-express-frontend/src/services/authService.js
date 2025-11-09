@@ -28,8 +28,9 @@ const authService = {
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
       }
-      
-      return { success: true, token: response.data.token };
+
+      // Return response data as `data` so callers can check for `data.user`
+      return { success: true, token: response.data.token, data: response.data };
     } catch (error) {
       return {
         success: false,
