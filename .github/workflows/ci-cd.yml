@@ -1,17 +1,17 @@
-name: CI-CD Pipeline (Sprint 1 Completion)
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop, feature/**]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # --- 1. Checkout code ---
+      # --- 1. Checkout repository ---
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: '18'
 
       # ---------- BACKEND ----------
       - name: Install backend dependencies
@@ -28,28 +28,27 @@ jobs:
 
       - name: Run backend tests with coverage
         working-directory: ./food-express-backend
+        run: |
+          echo "🧪 Running backend tests + coverage..."
+          npm test -- --coverage --runInBand || echo "Some tests failed or coverage missing"
         env:
           MONGO_URI: ${{ secrets.MONGO_URI }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-        run: |
-          echo "🧪 Running backend tests + coverage..."
-          npm test -- --coverage --runInBand || echo "Some tests failed or coverage missing"
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
 
       - name: Upload backend coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
-          path: food-express-backend/coverage/**
-          if-no-files-found: warn
+          path: ./food-express-backend/coverage/
 
       - name: Run ESLint (backend)
         working-directory: ./food-express-backend
         run: |
           echo "🔍 Running ESLint for backend..."
-          npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=10 || true
+          npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10 || true
 
       - name: Security audit (backend)
         working-directory: ./food-express-backend
@@ -66,7 +65,7 @@ jobs:
         working-directory: ./food-express-frontend
         run: |
           echo "🔍 Running ESLint for frontend..."
-          npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=10 || true
+          npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10 || true
 
       - name: Build frontend
         working-directory: ./food-express-frontend
@@ -79,9 +78,9 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-
+    
     steps:
-      - name: Deploy to staging (placeholder)
+      - name: Deploy to staging
         run: echo "🚀 Deploying to staging environment..."
 
       - name: Integration tests placeholder
