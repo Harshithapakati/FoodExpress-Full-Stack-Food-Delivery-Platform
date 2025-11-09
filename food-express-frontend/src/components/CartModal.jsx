@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import "./CartModal.css";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './CartModal.css';
 
 function CartModal({ onClose, updateCartCount }) {
   const [cart, setCart] = useState(null);
@@ -13,28 +13,28 @@ function CartModal({ onClose, updateCartCount }) {
 
   const fetchCart = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5001/api/cart", {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5001/api/cart', {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
       if (data.success) {
         setCart(data.cart);
-        console.log("Cart data fetched in modal:", data.cart);
+        console.log('Cart data fetched in modal:', data.cart);
       }
     } catch (error) {
-      console.error("Error fetching cart:", error);
+      console.error('Error fetching cart:', error);
     }
     setLoading(false);
   };
 
   const updateQuantity = async (itemId, newQuantity) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5001/api/cart/update/${itemId}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({ quantity: newQuantity })
@@ -45,15 +45,15 @@ function CartModal({ onClose, updateCartCount }) {
         updateCartCount();
       }
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      console.error('Error updating quantity:', error);
     }
   };
 
   const removeItem = async (itemId) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5001/api/cart/remove/${itemId}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -62,16 +62,16 @@ function CartModal({ onClose, updateCartCount }) {
         updateCartCount();
       }
     } catch (error) {
-      console.error("Error removing item:", error);
+      console.error('Error removing item:', error);
     }
   };
 
   const clearCart = async () => {
-    if (!window.confirm("Are you sure you want to clear your cart?")) return;
+    if (!window.confirm('Are you sure you want to clear your cart?')) return;
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/cart/clear", {
-        method: "DELETE",
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/cart/clear', {
+        method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -80,7 +80,7 @@ function CartModal({ onClose, updateCartCount }) {
         updateCartCount();
       }
     } catch (error) {
-      console.error("Error clearing cart:", error);
+      console.error('Error clearing cart:', error);
     }
   };
 
@@ -119,7 +119,7 @@ function CartModal({ onClose, updateCartCount }) {
               {cart.items.map(item => (
                 <div key={item._id} className="cart-item">
                   <img
-                    src={item.image || "https://via.placeholder.com/80"}
+                    src={item.image || 'https://via.placeholder.com/80'}
                     alt={item.name}
                     className="cart-item-image"
                   />
@@ -161,7 +161,7 @@ function CartModal({ onClose, updateCartCount }) {
                   className="checkout-btn"
                   onClick={() => {
                     onClose();
-                    navigate("/checkout");
+                    navigate('/checkout');
                   }}
                 >
                   Proceed to Checkout

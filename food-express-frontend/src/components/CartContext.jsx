@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const CartContext = createContext();
 
@@ -8,9 +8,9 @@ export function CartProvider({ children }) {
   // Fetch cart when context loads
   const fetchCartFromBackend = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       if (!token) return;
-      const res = await fetch("http://localhost:5001/api/cart", {
+      const res = await fetch('http://localhost:5001/api/cart', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -31,7 +31,7 @@ export function CartProvider({ children }) {
         setCartItems(items);
       }
     } catch (error) {
-      console.error("Fetch cart error:", error);
+      console.error('Fetch cart error:', error);
     }
   };
 
@@ -46,10 +46,10 @@ export function CartProvider({ children }) {
         await removeFromCart(itemId);
         return;
       }
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       if (!token) return;
       await fetch(`http://localhost:5001/api/cart/update/${itemId}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -59,17 +59,17 @@ export function CartProvider({ children }) {
       // Refresh cart after update
       await fetchCartFromBackend();
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      console.error('Error updating quantity:', error);
     }
   };
 
   // Remove item by ID and refresh cart
   const removeFromCart = async (itemId) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
       if (!token) return;
       await fetch(`http://localhost:5001/api/cart/remove/${itemId}`, {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -77,7 +77,7 @@ export function CartProvider({ children }) {
       // Refresh cart after removal
       await fetchCartFromBackend();
     } catch (error) {
-      console.error("Error removing item:", error);
+      console.error('Error removing item:', error);
     }
   };
 

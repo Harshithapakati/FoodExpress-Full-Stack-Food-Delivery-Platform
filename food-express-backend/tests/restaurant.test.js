@@ -3,6 +3,7 @@ const request = require('supertest');
 const { startTestServer, stopTestServer } = require('./setupServer');
 
 let baseUrl;
+let _token;
 
 beforeAll(async () => {
   const r = await startTestServer();
@@ -14,8 +15,7 @@ afterAll(async () => {
 });
 
 describe('Restaurant Discovery & Menu Management Module', () => {
-  let token = null;
-  let restaurantId = null;
+ 
 
   beforeAll(async () => {
     // try to login as admin if test admin exists; otherwise token stays null
@@ -24,9 +24,9 @@ describe('Restaurant Discovery & Menu Management Module', () => {
         .post('/api/auth/login')
         .send({ email: 'admin@example.com', password: 'adminpass' });
       if (loginRes.statusCode === 200 && loginRes.body.token) {
-        token = loginRes.body.token;
+        _token = loginRes.body.token;
       }
-    } catch (err) {
+    } catch (_err) {
       // ignore
     }
   });

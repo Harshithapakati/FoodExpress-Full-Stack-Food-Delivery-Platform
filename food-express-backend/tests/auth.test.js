@@ -13,7 +13,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await stopTestServer();
   // ensure mongoose connections (if any in this process) are closed
-  try { await mongoose.disconnect(); } catch (_) {}
+  try { await mongoose.disconnect(); } catch (_) { /*ignore */ }
 });
 
 describe('Authentication & Authorization Module', () => {

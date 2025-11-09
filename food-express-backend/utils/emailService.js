@@ -21,8 +21,8 @@ const sendOTPEmail = async (email, otp) => {
   if (!isEmailConfigured) {
     console.log(`\n=== OTP FOR ${email} ===`);
     console.log(`OTP: ${otp}`);
-    console.log(`Expires in 10 minutes`);
-    console.log(`========================\n`);
+    console.log('Expires in 10 minutes');
+    console.log('========================\n');
     return true;
   }
   const mailOptions = {

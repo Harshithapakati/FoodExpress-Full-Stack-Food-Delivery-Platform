@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './BrowseRestaurants.css';
 import CartModal from './CartModal';
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
 function BrowseRestaurants() {
   const [restaurants, setRestaurants] = useState([]);
