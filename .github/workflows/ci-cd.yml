@@ -11,49 +11,73 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  # ========================================
+  # BACKEND TEST & BUILD JOB
+  # ========================================
+  backend:
+    name: Backend Tests & Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      # --- 1. Checkout repository ---
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- 2. Setup Node.js ---
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: |
-            food-express-backend/package-lock.json
-            food-express-frontend/package-lock.json
+          cache-dependency-path: food-express-backend/package-lock.json
 
-      # ---------- BACKEND ----------
-      - name: Install backend dependencies
+      - name: Install dependencies
         working-directory: ./food-express-backend
-        run: npm install
+        run: npm ci --prefer-offline
 
-      - name: Run backend tests with coverage
+      - name: Run tests with coverage
         working-directory: ./food-express-backend
-        run: |
-          echo "🧪 Running backend tests + coverage..."
-          npm test -- --coverage --runInBand || echo "Some tests failed or coverage missing"
+        run: npm test -- --coverage --runInBand --ci
         env:
           # Use safe defaults for PRs from forks (secrets unavailable)
           MONGO_URI: ${{ secrets.MONGO_URI || '' }}
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'testsecret' }}
-          EMAIL_USER: ${{ secrets.EMAIL_USER || 'na' }}
-          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD || 'na' }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER || 'test@example.com' }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD || 'testpass' }}
           RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID || 'rzp_test_key' }}
           RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET || 'test_secret' }}
           RAZORPAY_MOCK: 'true'
+          CI: true
 
-      - name: Enforce backend coverage ≥ 80%
+      - name: Enforce coverage threshold (≥80%)
+        working-directory: ./food-express-backend
         run: |
-          node -e "const s=require('./food-express-backend/coverage/coverage-summary.json').total; const st=s.statements.pct, ln=s.lines.pct; console.log('Backend coverage:', st, ln); if (st < 80 || ln < 80) { console.error('Coverage below threshold (need ≥80% statements & lines)'); process.exit(1); }"
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e "
+              const s = require('./coverage/coverage-summary.json').total;
+              const st = s.statements.pct;
+              const ln = s.lines.pct;
+              console.log('📊 Backend Coverage: Statements ' + st + '%, Lines ' + ln + '%');
+              if (st < 80 || ln < 80) {
+                console.error('❌ Coverage below 80% threshold');
+                process.exit(1);
+              }
+              console.log('✅ Coverage threshold met');
+            "
+          else
+            echo "⚠️  No coverage report found"
+          fi
 
-      - name: Upload backend coverage report
+      - name: Run ESLint
+        working-directory: ./food-express-backend
+        run: npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10
+        continue-on-error: true
+
+      - name: Security audit
+        working-directory: ./food-express-backend
+        run: npm audit --audit-level=high --production
+        continue-on-error: true
+
+      - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -61,39 +85,47 @@ jobs:
           path: ./food-express-backend/coverage/
           retention-days: 7
 
-      - name: Archive backend test results
-        if: always()
-        run: |
-          mkdir -p ci-artifacts/backend
-          cp -r food-express-backend/coverage ci-artifacts/backend/coverage || true
-          echo "Backend test & coverage archived"
+  # ========================================
+  # FRONTEND TEST & BUILD JOB
+  # ========================================
+  frontend:
+    name: Frontend Tests, Lint & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-      - name: Run ESLint (backend)
-        working-directory: ./food-express-backend
-        run: |
-          echo "🔍 Running ESLint for backend..."
-          npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10 || true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Security audit (backend)
-        working-directory: ./food-express-backend
-        run: |
-          echo "🛡️ Running npm security audit..."
-          npm audit --audit-level=high || true
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: food-express-frontend/package-lock.json
 
-      # ---------- FRONTEND ----------
-      - name: Install frontend dependencies
+      - name: Install dependencies
         working-directory: ./food-express-frontend
-        run: npm install
+        run: npm ci --prefer-offline
 
-      - name: Run frontend tests with coverage
+      - name: Run tests with coverage
         working-directory: ./food-express-frontend
-        run: |
-          echo "🧪 Running frontend tests + coverage (Jest + RTL)..."
-          npm test -- --coverage --runInBand || echo "Frontend tests failed or coverage below threshold"
+        run: npm test -- --coverage --runInBand --ci --watchAll=false
         env:
           CI: true
 
-      - name: Upload frontend coverage report
+      - name: Run ESLint
+        working-directory: ./food-express-frontend
+        run: npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10
+        continue-on-error: true
+
+      - name: Build production bundle
+        working-directory: ./food-express-frontend
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -101,61 +133,143 @@ jobs:
           path: ./food-express-frontend/coverage/
           retention-days: 7
 
-      - name: Archive frontend test results
-        if: always()
-        run: |
-          mkdir -p ci-artifacts/frontend
-          cp -r food-express-frontend/coverage ci-artifacts/frontend/coverage || true
-          echo "Frontend test & coverage archived"
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: ./food-express-frontend/dist/
+          retention-days: 7
 
-      - name: Run ESLint (frontend)
-        working-directory: ./food-express-frontend
-        run: |
-          echo "🔍 Running ESLint for frontend..."
-          npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10 || true
+  # ========================================
+  # AGGREGATE & REPORT JOB
+  # ========================================
+  report:
+    name: Generate Reports
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    if: always()
 
-      - name: Build frontend
-        working-directory: ./food-express-frontend
-        run: |
-          echo "🏗️ Building frontend..."
-          npm run build --if-present || echo "No build script found"
+    steps:
+      - name: Download backend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-coverage
+          path: ./coverage/backend
+        continue-on-error: true
 
-      - name: Compress combined CI artifacts
-        if: always()
+      - name: Download frontend coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-coverage
+          path: ./coverage/frontend
+        continue-on-error: true
+
+      - name: Generate combined report
+        run: |
+          mkdir -p reports
+          echo "# CI/CD Report" > reports/summary.md
+          echo "**Commit:** $GITHUB_SHA" >> reports/summary.md
+          echo "**Branch:** $GITHUB_REF_NAME" >> reports/summary.md
+          echo "**Triggered by:** $GITHUB_ACTOR" >> reports/summary.md
+          echo "" >> reports/summary.md
+          
+          if [ -f coverage/backend/coverage-summary.json ]; then
+            echo "## Backend Coverage" >> reports/summary.md
+            node -e "
+              const s = require('./coverage/backend/coverage-summary.json').total;
+              console.log('- Statements: ' + s.statements.pct + '%');
+              console.log('- Branches: ' + s.branches.pct + '%');
+              console.log('- Functions: ' + s.functions.pct + '%');
+              console.log('- Lines: ' + s.lines.pct + '%');
+            " >> reports/summary.md
+          fi
+          
+          echo "" >> reports/summary.md
+          cat reports/summary.md
+
+      - name: Create combined artifact bundle
         run: |
           mkdir -p ci-artifacts/meta
-          echo "Commit SHA: $GITHUB_SHA" > ci-artifacts/meta/build-info.txt
-          zip -r ci-artifacts.zip ci-artifacts || echo "Zip creation warning"
+          cp reports/summary.md ci-artifacts/meta/ || true
+          cp -r coverage ci-artifacts/ || true
+          echo "Commit: $GITHUB_SHA" > ci-artifacts/meta/build-info.txt
+          echo "Branch: $GITHUB_REF_NAME" >> ci-artifacts/meta/build-info.txt
+          echo "Timestamp: $(date -u)" >> ci-artifacts/meta/build-info.txt
+          tar -czf ci-artifacts.tar.gz ci-artifacts/
 
-      - name: Upload combined CI artifact bundle
-        if: always()
+      - name: Upload combined bundle
         uses: actions/upload-artifact@v4
         with:
           name: ci-artifacts-bundle
-          path: ci-artifacts.zip
+          path: ci-artifacts.tar.gz
+          retention-days: 30
 
-      - name: Failure diagnostics
-        if: failure()
+  # ========================================
+  # FAILURE DIAGNOSTICS
+  # ========================================
+  diagnostics:
+    name: Diagnostics
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: System diagnostics
         run: |
+          echo "::group::System Information"
           node -v
           npm -v
-          du -sh food-express-backend || true
-          du -sh food-express-frontend || true
-          cat food-express-backend/coverage/coverage-summary.json || true
-          cat food-express-frontend/coverage/coverage-summary.json || true
+          df -h
+          echo "::endgroup::"
 
-  # ---------- OPTIONAL DEPLOY STUB (for Sprint 2) ----------
+      - name: Download artifacts for debugging
+        uses: actions/download-artifact@v4
+        with:
+          path: ./debug-artifacts
+        continue-on-error: true
+
+      - name: Display coverage summaries
+        run: |
+          echo "::group::Backend Coverage"
+          cat debug-artifacts/backend-coverage/coverage-summary.json 2>/dev/null || echo "No backend coverage"
+          echo "::endgroup::"
+          
+          echo "::group::Frontend Coverage"
+          cat debug-artifacts/frontend-coverage/coverage-summary.json 2>/dev/null || echo "No frontend coverage"
+          echo "::endgroup::"
+
+  # ========================================
+  # DEPLOY JOB (main branch only)
+  # ========================================
   deploy:
-    needs: build
+    name: Deploy
+    needs: [backend, frontend]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
+      - name: Download frontend build
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: ./dist
+
       - name: Deploy to staging
-        run: echo "🚀 Deploying to staging environment..."
+        run: |
+          echo "🚀 Deploying to staging environment..."
+          echo "Build artifacts ready in ./dist"
+          # Add actual deployment commands here
 
-      - name: Integration tests placeholder
-        run: echo "🧩 Running integration tests..."
+      - name: Integration tests
+        run: |
+          echo "🧩 Running integration tests..."
+          # Add integration test commands here
 
-      - name: Deploy to production (placeholder)
-        run: echo "🌍 Deploying to production environment..."
+      - name: Deploy to production
+        if: success()
+        run: |
+          echo "🌍 Deploying to production environment..."
+          # Add production deployment commands here

@@ -13,6 +13,22 @@ function mockFetchImplementation({ orders = [], success = true } = {}) {
         json: () => Promise.resolve({ success, orders })
       });
     }
+    if (url.includes('/api/payment/order')) {
+      return Promise.resolve({
+        json: () => Promise.resolve({ 
+          success: true, 
+          order_id: 'order_abc123', 
+          amount: 450, 
+          currency: 'INR', 
+          key_id: 'rzp_test_key' 
+        })
+      });
+    }
+    if (url.includes('/api/payment/verify')) {
+      return Promise.resolve({
+        json: () => Promise.resolve({ success: true, order: { _id: 'order123' } })
+      });
+    }
     // Default mock for other endpoints
     return Promise.resolve({
       json: () => Promise.resolve({ success: true })
@@ -22,6 +38,10 @@ function mockFetchImplementation({ orders = [], success = true } = {}) {
 
 describe('OrderHistory component', () => {
   beforeEach(() => {
+    // Setup localStorage
+    localStorage.setItem('token', 'fake-token');
+    localStorage.setItem('user', JSON.stringify({ email: 'test@example.com' }));
+    
     global.fetch = mockFetchImplementation({
       orders: [
         {
@@ -38,10 +58,28 @@ describe('OrderHistory component', () => {
       ],
       success: true
     });
+
+    // Mock Razorpay with proper constructor
+    window.Razorpay = jest.fn((options) => {
+      return {
+        open: jest.fn(() => {
+          // Simulate successful payment
+          if (options.handler) {
+            options.handler({
+              razorpay_order_id: options.order_id,
+              razorpay_payment_id: 'pay_123',
+              razorpay_signature: 'sig_123'
+            });
+          }
+        }),
+        on: jest.fn()
+      };
+    });
   });
 
   afterEach(() => {
     global.fetch = originalFetch;
+    localStorage.clear();
     jest.clearAllMocks();
   });
 

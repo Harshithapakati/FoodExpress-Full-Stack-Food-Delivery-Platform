@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CheckoutPage from '../CheckoutPage.jsx';
 import { BrowserRouter } from 'react-router-dom';
-import CartContext from '../CartContext.jsx';
+import { CartContext } from '../CartContext.jsx';
 
 jest.mock('react-router-dom', () => {
   const actual = jest.requireActual('react-router-dom');

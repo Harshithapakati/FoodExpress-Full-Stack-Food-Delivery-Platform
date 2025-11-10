@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import CheckoutPage from '../CheckoutPage.jsx';
 import { BrowserRouter } from 'react-router-dom';
-import CartContext from '../CartContext.jsx';
+import { CartContext } from '../CartContext.jsx';
 
 function renderWithProviders(ui, { cartItems = [] } = {}) {
   return render(
