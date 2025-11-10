@@ -17,12 +17,9 @@ if (isEmailConfigured) {
 
 // Send OTP email
 const sendOTPEmail = async (email, otp) => {
-  // If email is not configured, just log the OTP for development
+  // If email is not configured, just log for development (but NOT the actual OTP)
   if (!isEmailConfigured) {
-    console.log(`\n=== OTP FOR ${email} ===`);
-    console.log(`OTP: ${otp}`);
-    console.log('Expires in 10 minutes');
-    console.log('========================\n');
+    console.log(`OTP email requested for ${email} (email service not configured)`);
     return true;
   }
   const mailOptions = {

@@ -1,10 +1,19 @@
+// Mock email service BEFORE imports (Jest hoists this)
+let capturedOTP = null;
+jest.mock('../utils/emailService', () => ({
+  sendOTPEmail: jest.fn((email, otp) => {
+    capturedOTP = otp;
+    return Promise.resolve(true);
+  })
+}));
+
 const request = require('supertest');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 const User = require('../models/User');
-let app;
 
+let app;
 let mongo; let email;
 
 beforeAll(async () => {
@@ -22,26 +31,16 @@ afterAll(async () => {
   await mongo.stop();
 });
 
-function captureOTPLogs(run) {
-  const logs = [];
-  const orig = console.log;
-  console.log = (...args) => { logs.push(args.join(' ')); orig.apply(console, args); };
-  return run().then(() => {
-    console.log = orig; return logs;
-  }).catch((e) => { console.log = orig; throw e; });
-}
-
-function extractOTP(logs) {
-  const line = logs.find(l => l.includes('OTP:')) || '';
-  const match = line.match(/OTP:\s*(\d{6})/);
-  return match ? match[1] : null;
-}
-
 test('verify OTP and reset password success', async () => {
-  const logs = await captureOTPLogs(async () => {
-    await request(app).post('/api/auth/forgot-password').send({ email });
-  });
-  const otp = extractOTP(logs);
+  // Reset captured OTP
+  capturedOTP = null;
+  
+  // Request OTP
+  await request(app).post('/api/auth/forgot-password').send({ email });
+  
+  // Get OTP from mock (secure - no logging)
+  const otp = capturedOTP;
+  expect(otp).toBeTruthy();
   expect(otp).toHaveLength(6);
 
   const verify = await request(app).post('/api/auth/verify-otp').send({ email, otp });
@@ -53,13 +52,16 @@ test('verify OTP and reset password success', async () => {
 });
 
 test('expired OTP returns 400', async () => {
+  // Reset captured OTP
+  capturedOTP = null;
+  
   // Request OTP
-  const logs = await captureOTPLogs(async () => {
-    await request(app).post('/api/auth/forgot-password').send({ email });
-  });
-  const otp = extractOTP(logs);
-
-  // Expire it
+  await request(app).post('/api/auth/forgot-password').send({ email });
+  
+  // Get OTP from mock and expire it in database
+  const otp = capturedOTP;
+  expect(otp).toBeTruthy();
+  
   const user = await User.findOne({ email });
   user.resetOTPExpires = Date.now() - 1000;
   await user.save();
