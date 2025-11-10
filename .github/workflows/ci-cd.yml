@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: 5-Stage CI/CD Pipeline
 
 on:
   push:
@@ -7,84 +7,262 @@ on:
     branches: [main, develop]
 
 jobs:
+  # ========================================
+  # STAGE 1: BUILD
+  # ========================================
   build:
+    name: "Stage 1: Build"
     runs-on: ubuntu-latest
-
+    
     steps:
-      # --- 1. Checkout repository ---
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- 2. Setup Node.js ---
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # ---------- BACKEND ----------
       - name: Install backend dependencies
         working-directory: ./food-express-backend
         run: npm install
 
-      - name: Run backend tests with coverage
-        working-directory: ./food-express-backend
-        run: |
-          echo "🧪 Running backend tests + coverage..."
-          npm test -- --coverage --runInBand || echo "Some tests failed or coverage missing"
-        env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
-
-      - name: Upload backend coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: ./food-express-backend/coverage/
-
-      - name: Run ESLint (backend)
-        working-directory: ./food-express-backend
-        run: |
-          echo "🔍 Running ESLint for backend..."
-          npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10 || true
-
-      - name: Security audit (backend)
-        working-directory: ./food-express-backend
-        run: |
-          echo "🛡️ Running npm security audit..."
-          npm audit --audit-level=high || true
-
-      # ---------- FRONTEND ----------
       - name: Install frontend dependencies
         working-directory: ./food-express-frontend
         run: npm install
 
-      - name: Run ESLint (frontend)
-        working-directory: ./food-express-frontend
-        run: |
-          echo "🔍 Running ESLint for frontend..."
-          npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10 || true
-
       - name: Build frontend
         working-directory: ./food-express-frontend
-        run: |
-          echo "🏗️ Building frontend..."
-          npm run build --if-present || echo "No build script found"
+        run: npm run build
 
-  # ---------- OPTIONAL DEPLOY STUB (for Sprint 2) ----------
-  deploy:
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            ./food-express-backend/node_modules
+            ./food-express-frontend/node_modules
+            ./food-express-frontend/dist
+          retention-days: 1
+
+  # ========================================
+  # STAGE 2: TEST
+  # ========================================
+  test:
+    name: "Stage 2: Test"
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
     
     steps:
-      - name: Deploy to staging
-        run: echo "🚀 Deploying to staging environment..."
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Integration tests placeholder
-        run: echo "🧩 Running integration tests..."
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-      - name: Deploy to production (placeholder)
-        run: echo "🌍 Deploying to production environment..."
+      - name: Install backend dependencies
+        working-directory: ./food-express-backend
+        run: npm install
+
+      - name: Install frontend dependencies
+        working-directory: ./food-express-frontend
+        run: npm install
+
+      - name: Run backend tests
+        working-directory: ./food-express-backend
+        run: npm test -- --runInBand
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI || '' }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'testsecret' }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER || 'test@example.com' }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD || 'testpass' }}
+          RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID || 'rzp_test_key' }}
+          RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET || 'test_secret' }}
+          RAZORPAY_MOCK: 'true'
+          CI: true
+
+      - name: Run frontend tests
+        working-directory: ./food-express-frontend
+        run: npm test -- --watchAll=false
+        env:
+          CI: true
+
+  # ========================================
+  # STAGE 3: COVERAGE
+  # ========================================
+  coverage:
+    name: "Stage 3: Coverage"
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install backend dependencies
+        working-directory: ./food-express-backend
+        run: npm install
+
+      - name: Install frontend dependencies
+        working-directory: ./food-express-frontend
+        run: npm install
+
+      - name: Generate backend coverage
+        working-directory: ./food-express-backend
+        run: npm test -- --coverage --runInBand
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI || '' }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'testsecret' }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER || 'test@example.com' }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD || 'testpass' }}
+          RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID || 'rzp_test_key' }}
+          RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET || 'test_secret' }}
+          RAZORPAY_MOCK: 'true'
+          CI: true
+
+      - name: Generate frontend coverage
+        working-directory: ./food-express-frontend
+        run: npm test -- --coverage --watchAll=false
+        env:
+          CI: true
+        continue-on-error: true
+
+      - name: Upload backend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: ./food-express-backend/coverage/
+          retention-days: 7
+
+      - name: Upload frontend coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: ./food-express-frontend/coverage/
+          retention-days: 7
+
+  # ========================================
+  # STAGE 4: LINT
+  # ========================================
+  lint:
+    name: "Stage 4: Lint"
+    needs: coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install backend dependencies
+        working-directory: ./food-express-backend
+        run: npm install
+
+      - name: Install frontend dependencies
+        working-directory: ./food-express-frontend
+        run: npm install
+
+      - name: Lint backend code
+        working-directory: ./food-express-backend
+        run: npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10
+        continue-on-error: true
+
+      - name: Lint frontend code
+        working-directory: ./food-express-frontend
+        run: npm run lint || npx eslint . --ext .js,.jsx --max-warnings=10
+        continue-on-error: true
+
+  # ========================================
+  # STAGE 5: SECURITY
+  # ========================================
+  security:
+    name: "Stage 5: Security"
+    needs: lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install backend dependencies
+        working-directory: ./food-express-backend
+        run: npm install
+
+      - name: Install frontend dependencies
+        working-directory: ./food-express-frontend
+        run: npm install
+
+      - name: Security audit backend
+        working-directory: ./food-express-backend
+        run: npm audit --audit-level=high --production
+        continue-on-error: true
+
+      - name: Security audit frontend
+        working-directory: ./food-express-frontend
+        run: npm audit --audit-level=high --production
+        continue-on-error: true
+
+  # ========================================
+  # STAGE 6: PACKAGE (Deploy)
+  # ========================================
+  package:
+    name: "Stage 6: Package"
+    needs: security
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ./
+        continue-on-error: true
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: '*-coverage'
+          path: ./coverage-reports
+        continue-on-error: true
+
+      - name: Create deployment package
+        run: |
+          echo "📦 Creating deployment package..."
+          mkdir -p deployment-package
+          cp -r food-express-backend deployment-package/ || true
+          cp -r food-express-frontend/dist deployment-package/frontend || true
+          tar -czf deployment-package.tar.gz deployment-package/
+          echo "✅ Deployment package created"
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-package
+          path: deployment-package.tar.gz
+          retention-days: 30
+
+      - name: Deploy notification
+        run: |
+          echo "🚀 Ready for deployment"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"

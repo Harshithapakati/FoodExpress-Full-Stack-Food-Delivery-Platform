@@ -4,6 +4,8 @@ const Order = require('../models/Order');
 const auth = require('../middleware/auth');
 
 // Place a new order
+// NOTE: Order creation is now handled in /api/payment/verify after successful payment
+// This endpoint is kept for backward compatibility but order creation is disabled
 router.post('/place', auth, async (req, res) => {
   try {
     console.log('Order payload received:', JSON.stringify(req.body));
@@ -24,6 +26,17 @@ router.post('/place', auth, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Missing required order fields', missing });
     }
 
+    // ORDER CREATION DISABLED - Orders are now created only after payment verification
+    // For cash on delivery, you may want to handle it differently
+    // For now, returning an error to force payment flow
+    if (paymentMethod === 'card') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Card payments must go through payment gateway. Please use Razorpay checkout.' 
+      });
+    }
+
+    // For cash on delivery, still allow direct order creation
     const order = new Order({
       userId: req.user && (req.user.id || req.user.userId),
       restaurantName,
@@ -35,7 +48,7 @@ router.post('/place', auth, async (req, res) => {
 
     try {
       await order.save();
-      console.log('Order saved successfully, id:', order._id);
+      console.log('Order saved successfully (COD), id:', order._id);
       return res.json({ success: true, order });
     } catch (saveErr) {
       // Mongoose validation or DB error — return details to help debugging (safe for dev)

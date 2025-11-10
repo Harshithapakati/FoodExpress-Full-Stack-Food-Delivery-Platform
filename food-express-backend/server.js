@@ -1,7 +1,19 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 
+// Environment normalization
+const isProd = process.env.NODE_ENV === 'production';
+
+// Provide sensible local defaults before validation (non-production only)
+if (!process.env.MONGO_URI) {
+  process.env.MONGO_URI = 'mongodb://localhost:27017/foodexpress';
+}
+if (!process.env.JWT_SECRET && !isProd) {
+  process.env.JWT_SECRET = 'testsecret';
+}
+
 // Security: Validate required environment variables
-const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_APP_PASSWORD'];
+// In production we require DB + JWT. Email creds are recommended but not fatal.
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -10,63 +22,15 @@ if (missingVars.length > 0) {
   process.exit(1);
 }
 
-// Security: Override MongoDB URI only if not set
-if (!process.env.MONGO_URI) {
-  process.env.MONGO_URI = 'mongodb://localhost:27017/foodexpress';
+// Email config warnings (optional in dev/test, recommended in prod)
+if (isProd && (!process.env.EMAIL_USER || !process.env.EMAIL_APP_PASSWORD)) {
+  console.warn('⚠️  Email credentials not set. Password reset emails will not be sent in production.');
 }
 
-const express = require('express');
 const connectDB = require('./config/db');
-const cors = require('cors');
+const app = require('./app');
 
-const app = express();
 connectDB();
-
-// Security: Configure CORS properly
-app.use(cors({
-  origin: function (origin, callback) {
-    // In development, allow all localhost origins
-    if (process.env.NODE_ENV !== 'production') {
-      if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    } else {
-      // In production, only allow the specified frontend URL
-      const allowedOrigin = process.env.FRONTEND_URL;
-      if (origin === allowedOrigin) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    }
-  },
-  credentials: true
-}));
-
-// Security: Limit request size
-app.use(express.json({ limit: '10mb' }));
-
-// Security: Add security headers
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  next();
-});
-
-// Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/restaurants', require('./routes/restaurants'));
-app.use('/api/menu', require('./routes/menu'));
-app.use('/api/cart', require('./routes/cart'));
-app.use('/api/orders', require('./routes/orders'));
-
-
-// Health check
-app.get('/', (req, res) => res.send('API running!'));
 
 // Security: Generate a strong JWT secret if not provided
 if (process.env.JWT_SECRET === 'your_jwt_secret_key_here') {
