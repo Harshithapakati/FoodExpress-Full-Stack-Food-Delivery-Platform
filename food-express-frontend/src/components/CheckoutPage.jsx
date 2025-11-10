@@ -60,6 +60,7 @@ export default function CheckoutPage() {
 
     const token = localStorage.getItem("token");
     const totalAmount = subtotal + delivery + taxes;
+    const totalAmount = subtotal + delivery + taxes;
 
     // For cash on delivery, use the old flow
     if (payMethod === "cash") {
@@ -352,6 +353,7 @@ export default function CheckoutPage() {
           <h2>Payment Method</h2>
           <div className="checkout-payment-methods">
             <label><input type="radio" name="pay" value="cash" checked={payMethod === "cash"} onChange={() => setPayMethod("cash")} /> Cash on Delivery</label>
+            <label><input type="radio" name="pay" value="card" checked={payMethod === "card"} onChange={() => setPayMethod("card")} /> Card</label>
             <label><input type="radio" name="pay" value="card" checked={payMethod === "card"} onChange={() => setPayMethod("card")} /> Card</label>
           </div>
           <button type="submit" className="checkout-place-order-btn">Place Order</button>

@@ -6,6 +6,7 @@ function OrderHistory() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [retrying, setRetrying] = useState(null);
+  const [retrying, setRetrying] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,11 +15,15 @@ function OrderHistory() {
 
   const fetchOrderHistory = async () => {
     setLoading(true);
+    setLoading(true);
     const token = localStorage.getItem('token');
     const res = await fetch('http://localhost:5001/api/orders/history', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();
+    if (data.success) {
+      setOrders(data.orders);
+    }
     if (data.success) {
       setOrders(data.orders);
     }
@@ -123,8 +128,10 @@ function OrderHistory() {
     <div className="order-history-container">
       <button 
         onClick={() => navigate('/browse')} 
+        onClick={() => navigate('/browse')} 
         className="back-button"
       >
+        Back to Home
         Back to Home
       </button>
       <h2>Your Order History</h2>
@@ -135,6 +142,7 @@ function OrderHistory() {
           <div key={order._id} className="order-card">
             <b>Date:</b> {new Date(order.createdAt).toLocaleString()}<br />
             <b>Restaurant:</b> {order.restaurantName}<br />
+            <b>Status:</b> <span className={`order-status ${order.status.toLowerCase().replace(' ', '-')}`}>{order.status}</span><br />
             <b>Status:</b> <span className={`order-status ${order.status.toLowerCase().replace(' ', '-')}`}>{order.status}</span><br />
 
             <b className="order-items-title">Items:</b>
@@ -147,6 +155,16 @@ function OrderHistory() {
             </ul>
 
             <div className="order-total-row">Total: ₹{order.totalAmount}</div>
+
+            {order.status === 'Pending Payment' && (
+              <button 
+                className="retry-payment-btn"
+                onClick={() => handleRetryPayment(order)}
+                disabled={retrying === order._id}
+              >
+                {retrying === order._id ? 'Processing...' : 'Retry Payment'}
+              </button>
+            )}
 
             {order.status === 'Pending Payment' && (
               <button 
