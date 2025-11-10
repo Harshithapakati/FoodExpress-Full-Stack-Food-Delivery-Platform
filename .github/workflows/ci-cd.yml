@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, develop]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,6 +24,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: |
+            food-express-backend/package-lock.json
+            food-express-frontend/package-lock.json
 
       # ---------- BACKEND ----------
       - name: Install backend dependencies
@@ -32,10 +40,18 @@ jobs:
           echo "🧪 Running backend tests + coverage..."
           npm test -- --coverage --runInBand || echo "Some tests failed or coverage missing"
         env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          # Use safe defaults for PRs from forks (secrets unavailable)
+          MONGO_URI: ${{ secrets.MONGO_URI || '' }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'testsecret' }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER || 'na' }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD || 'na' }}
+          RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID || 'rzp_test_key' }}
+          RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET || 'test_secret' }}
+          RAZORPAY_MOCK: 'true'
+
+      - name: Enforce backend coverage ≥ 80%
+        run: |
+          node -e "const s=require('./food-express-backend/coverage/coverage-summary.json').total; const st=s.statements.pct, ln=s.lines.pct; console.log('Backend coverage:', st, ln); if (st < 80 || ln < 80) { console.error('Coverage below threshold (need ≥80% statements & lines)'); process.exit(1); }"
 
       - name: Upload backend coverage report
         if: always()
@@ -43,6 +59,14 @@ jobs:
         with:
           name: backend-coverage
           path: ./food-express-backend/coverage/
+          retention-days: 7
+
+      - name: Archive backend test results
+        if: always()
+        run: |
+          mkdir -p ci-artifacts/backend
+          cp -r food-express-backend/coverage ci-artifacts/backend/coverage || true
+          echo "Backend test & coverage archived"
 
       - name: Run ESLint (backend)
         working-directory: ./food-express-backend
@@ -61,6 +85,29 @@ jobs:
         working-directory: ./food-express-frontend
         run: npm install
 
+      - name: Run frontend tests with coverage
+        working-directory: ./food-express-frontend
+        run: |
+          echo "🧪 Running frontend tests + coverage (Jest + RTL)..."
+          npm test -- --coverage --runInBand || echo "Frontend tests failed or coverage below threshold"
+        env:
+          CI: true
+
+      - name: Upload frontend coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: ./food-express-frontend/coverage/
+          retention-days: 7
+
+      - name: Archive frontend test results
+        if: always()
+        run: |
+          mkdir -p ci-artifacts/frontend
+          cp -r food-express-frontend/coverage ci-artifacts/frontend/coverage || true
+          echo "Frontend test & coverage archived"
+
       - name: Run ESLint (frontend)
         working-directory: ./food-express-frontend
         run: |
@@ -72,6 +119,30 @@ jobs:
         run: |
           echo "🏗️ Building frontend..."
           npm run build --if-present || echo "No build script found"
+
+      - name: Compress combined CI artifacts
+        if: always()
+        run: |
+          mkdir -p ci-artifacts/meta
+          echo "Commit SHA: $GITHUB_SHA" > ci-artifacts/meta/build-info.txt
+          zip -r ci-artifacts.zip ci-artifacts || echo "Zip creation warning"
+
+      - name: Upload combined CI artifact bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-artifacts-bundle
+          path: ci-artifacts.zip
+
+      - name: Failure diagnostics
+        if: failure()
+        run: |
+          node -v
+          npm -v
+          du -sh food-express-backend || true
+          du -sh food-express-frontend || true
+          cat food-express-backend/coverage/coverage-summary.json || true
+          cat food-express-frontend/coverage/coverage-summary.json || true
 
   # ---------- OPTIONAL DEPLOY STUB (for Sprint 2) ----------
   deploy:

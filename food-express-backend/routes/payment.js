@@ -5,11 +5,39 @@ const crypto = require('crypto');
 const Order = require('../models/Order');
 const auth = require('../middleware/auth');
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Initialize Razorpay instance (used when not in mock mode)
+let razorpay = null;
+function getRazorpayInstance() {
+  if (process.env.RAZORPAY_MOCK === 'true') return null; // mock mode skips real instance
+  if (!razorpay) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+  return razorpay;
+}
+
+// Helper: create a Razorpay order (real or mock)
+async function createRazorpayOrder(options) {
+  if (process.env.RAZORPAY_MOCK === 'true') {
+    // Return a deterministic fake order for tests
+    return {
+      id: 'order_test_mock',
+      amount: options.amount,
+      currency: options.currency || 'INR',
+    };
+  }
+  const instance = getRazorpayInstance();
+  if (!instance) {
+    return {
+      id: 'order_test_mock',
+      amount: options.amount,
+      currency: options.currency || 'INR',
+    };
+  }
+  return instance.orders.create(options);
+}
 
 // Create Razorpay order
 router.post('/order', auth, async (req, res) => {
@@ -25,7 +53,7 @@ router.post('/order', auth, async (req, res) => {
       currency: 'INR',
     };
 
-    const order = await razorpay.orders.create(options);
+  const order = await createRazorpayOrder(options);
 
     res.json({
       success: true,
@@ -142,7 +170,7 @@ router.post('/retry/:orderId', auth, async (req, res) => {
       currency: 'INR',
     };
 
-    const razorpayOrder = await razorpay.orders.create(options);
+  const razorpayOrder = await createRazorpayOrder(options);
 
     res.json({
       success: true,

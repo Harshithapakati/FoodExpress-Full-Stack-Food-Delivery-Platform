@@ -58,51 +58,6 @@ export default function CheckoutPage() {
     }
     if (!validate()) return;
 
-<<<<<<< ours
-    const token = localStorage.getItem('token');
-
-    const orderPayload = {
-      restaurantName: restaurantInfo?.name || '',
-      items: cartItems.map(item => ({
-        name: item.name,
-        price: item.price,
-        quantity: item.qty,
-        image: item.img
-      })),
-      deliveryAddress: `${address.house}, ${address.street}, ${address.city} - ${address.pincode}`,
-      paymentMethod: payMethod,
-      totalAmount: subtotal + delivery + taxes
-    };
-
-    // Debugging logs: show token and exact payload sent
-    console.log('Placing order. Token present:', !!token);
-    console.log('Order payload about to be sent:', orderPayload);
-
-    try {
-      // Place order
-      const orderRes = await fetch('http://localhost:5001/api/orders/place', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(orderPayload)
-      });
-      const orderData = await orderRes.json();
-      if (!orderData.success) throw new Error('Order placement failed');
-
-      // Clear cart
-      await fetch('http://localhost:5001/api/cart/clear', {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCartItems([]);
-
-      if (payMethod === 'card') setPaymentStarted(true);
-      else setPlaced(true);
-    } catch (error) {
-      alert('Order failed: ' + error.message);
-=======
     const token = localStorage.getItem("token");
     const totalAmount = subtotal + delivery + taxes;
 
@@ -122,7 +77,7 @@ export default function CheckoutPage() {
       };
 
       try {
-        const orderRes = await fetch("http://localhost:5000/api/orders/place", {
+        const orderRes = await fetch("http://localhost:5001/api/orders/place", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -134,7 +89,7 @@ export default function CheckoutPage() {
         if (!orderData.success) throw new Error(orderData.error || "Order placement failed");
 
         // Clear cart
-        await fetch("http://localhost:5000/api/cart/clear", {
+        await fetch("http://localhost:5001/api/cart/clear", {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -150,7 +105,7 @@ export default function CheckoutPage() {
   if (payMethod === "card") {
       try {
         // Step 1: Create Razorpay order
-        const orderRes = await fetch("http://localhost:5000/api/payment/order", {
+        const orderRes = await fetch("http://localhost:5001/api/payment/order", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -179,7 +134,7 @@ export default function CheckoutPage() {
           handler: async function (response) {
             // Payment successful - verify on server
             try {
-              const verifyRes = await fetch("http://localhost:5000/api/payment/verify", {
+              const verifyRes = await fetch("http://localhost:5001/api/payment/verify", {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -206,7 +161,7 @@ export default function CheckoutPage() {
               
               if (verifyData.success) {
                 // Clear cart
-                await fetch("http://localhost:5000/api/cart/clear", {
+                await fetch("http://localhost:5001/api/cart/clear", {
                   method: "DELETE",
                   headers: { Authorization: `Bearer ${token}` }
                 });
@@ -251,7 +206,7 @@ export default function CheckoutPage() {
           
           // Create pending order on payment failure
           try {
-            const failedOrderRes = await fetch("http://localhost:5000/api/payment/failed", {
+            const failedOrderRes = await fetch("http://localhost:5001/api/payment/failed", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -276,7 +231,7 @@ export default function CheckoutPage() {
             
             if (failedOrderData.success) {
               // Clear cart even on failure
-              await fetch("http://localhost:5000/api/cart/clear", {
+              await fetch("http://localhost:5001/api/cart/clear", {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
               });
@@ -297,7 +252,6 @@ export default function CheckoutPage() {
         console.error("Payment initiation error:", error);
         alert("Payment failed: " + error.message);
       }
->>>>>>> theirs
     }
   };
 
@@ -397,13 +351,8 @@ export default function CheckoutPage() {
           </div>
           <h2>Payment Method</h2>
           <div className="checkout-payment-methods">
-<<<<<<< ours
-            <label><input type="radio" name="pay" value="cash" checked={payMethod === 'cash'} onChange={() => setPayMethod('cash')} /> Cash on Delivery</label>
-            <label><input type="radio" name="pay" value="card" checked={payMethod === 'card'} onChange={() => setPayMethod('card')} /> Card/UPI</label>
-=======
             <label><input type="radio" name="pay" value="cash" checked={payMethod === "cash"} onChange={() => setPayMethod("cash")} /> Cash on Delivery</label>
             <label><input type="radio" name="pay" value="card" checked={payMethod === "card"} onChange={() => setPayMethod("card")} /> Card</label>
->>>>>>> theirs
           </div>
           <button type="submit" className="checkout-place-order-btn">Place Order</button>
         </form>

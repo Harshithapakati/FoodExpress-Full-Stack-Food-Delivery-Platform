@@ -31,7 +31,7 @@ function OrderHistory() {
 
     try {
       // Step 1: Create new Razorpay order for retry
-      const retryRes = await fetch(`http://localhost:5000/api/payment/retry/${order._id}`, {
+      const retryRes = await fetch(`http://localhost:5001/api/payment/retry/${order._id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,7 +55,7 @@ function OrderHistory() {
         handler: async function (response) {
           // Payment successful - verify on server
           try {
-            const verifyRes = await fetch(`http://localhost:5000/api/payment/retry-verify/${order._id}`, {
+            const verifyRes = await fetch(`http://localhost:5001/api/payment/retry-verify/${order._id}`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
