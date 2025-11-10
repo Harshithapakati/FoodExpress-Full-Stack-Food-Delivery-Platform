@@ -32,16 +32,16 @@ function OrderHistory() {
     try {
       // Step 1: Create new Razorpay order for retry
       const retryRes = await fetch(`http://localhost:5001/api/payment/retry/${order._id}`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         }
       });
 
       const retryData = await retryRes.json();
       if (!retryData.success) {
-        throw new Error(retryData.error || "Failed to initiate retry");
+        throw new Error(retryData.error || 'Failed to initiate retry');
       }
 
       // Step 2: Open Razorpay checkout
@@ -50,15 +50,15 @@ function OrderHistory() {
         amount: retryData.amount,
         currency: retryData.currency,
         order_id: retryData.order_id,
-        name: "FoodExpress",
+        name: 'FoodExpress',
         description: `Retry payment for Order #${order._id.slice(-6)}`,
         handler: async function (response) {
           // Payment successful - verify on server
           try {
             const verifyRes = await fetch(`http://localhost:5001/api/payment/retry-verify/${order._id}`, {
-              method: "POST",
+              method: 'POST',
               headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
                 Authorization: `Bearer ${token}`
               },
               body: JSON.stringify({
@@ -74,26 +74,26 @@ function OrderHistory() {
               setRetrying(null);
               // Force immediate refresh
               await fetchOrderHistory();
-              alert("Payment successful! Order has been confirmed.");
+              alert('Payment successful! Order has been confirmed.');
             } else {
-              alert("Payment verification failed: " + (verifyData.error || "Unknown error"));
+              alert('Payment verification failed: ' + (verifyData.error || 'Unknown error'));
               setRetrying(null);
             }
           } catch (error) {
-            console.error("Payment verification error:", error);
-            alert("Payment verification failed: " + error.message);
+            console.error('Payment verification error:', error);
+            alert('Payment verification failed: ' + error.message);
             setRetrying(null);
           }
         },
         prefill: {
-          email: JSON.parse(localStorage.getItem("user") || "{}").email || ""
+          email: JSON.parse(localStorage.getItem('user') || '{}').email || ''
         },
         theme: {
-          color: "#e23744"
+          color: '#e23744'
         },
         modal: {
           ondismiss: function() {
-            console.log("Retry payment modal closed by user");
+            console.log('Retry payment modal closed by user');
             setRetrying(null);
           }
         }
@@ -105,14 +105,14 @@ function OrderHistory() {
       const rzp = new window.Razorpay(options);
       rzp.open();
 
-      rzp.on("payment.failed", function (response) {
-        alert("Payment failed: " + (response.error.description || "Unknown error"));
+      rzp.on('payment.failed', function (response) {
+        alert('Payment failed: ' + (response.error.description || 'Unknown error'));
         setRetrying(null);
       });
 
     } catch (error) {
-      console.error("Retry payment error:", error);
-      alert("Failed to retry payment: " + error.message);
+      console.error('Retry payment error:', error);
+      alert('Failed to retry payment: ' + error.message);
       setRetrying(null);
     }
   };

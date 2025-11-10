@@ -7,7 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 const originalFetch = global.fetch;
 
 function mockFetchImplementation({ orders = [], success = true } = {}) {
-  return jest.fn().mockImplementation((url, options) => {
+  return jest.fn().mockImplementation((url) => {
     if (url.includes('/api/orders/history')) {
       return Promise.resolve({
         json: () => Promise.resolve({ success, orders })

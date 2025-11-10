@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 global.alert = jest.fn();
 
 // Mock window.Razorpay
-global.Razorpay = jest.fn((options) => ({
+global.Razorpay = jest.fn(() => ({
   open: jest.fn(),
   on: jest.fn()
 }));

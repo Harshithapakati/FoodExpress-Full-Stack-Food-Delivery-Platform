@@ -16,7 +16,7 @@ const mockFetch = jest.fn();
 const originalFetch = global.fetch;
 
 function setupFetchForPaymentFlow() {
-  mockFetch.mockImplementation((url, options) => {
+  mockFetch.mockImplementation((url) => {
     if (url.includes('/api/payment/order')) {
       return Promise.resolve({
         json: () => Promise.resolve({ success: true, order_id: 'order_abc', amount: 500, currency: 'INR', key_id: 'rzp_test_key' })

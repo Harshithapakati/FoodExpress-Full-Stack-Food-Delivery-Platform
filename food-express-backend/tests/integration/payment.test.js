@@ -58,7 +58,7 @@ describe('Payment API (Razorpay) \n', () => {
   test('Verify payment success -> creates order (status Placed)', async () => {
     // 1) Create RZP order (mocked)
     const orderRes = await auth(request(baseUrl).post('/api/payment/order').send({ amount: 350 }));
-    const { order_id, key_id } = orderRes.body;
+    const { order_id } = orderRes.body;
 
     // 2) Generate signature with secret (use env secret or default testing secret)
     const secret = process.env.RAZORPAY_KEY_SECRET || 'test_secret';

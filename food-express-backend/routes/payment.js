@@ -53,7 +53,7 @@ router.post('/order', auth, async (req, res) => {
       currency: 'INR',
     };
 
-  const order = await createRazorpayOrder(options);
+    const order = await createRazorpayOrder(options);
 
     res.json({
       success: true,
@@ -170,7 +170,7 @@ router.post('/retry/:orderId', auth, async (req, res) => {
       currency: 'INR',
     };
 
-  const razorpayOrder = await createRazorpayOrder(options);
+    const razorpayOrder = await createRazorpayOrder(options);
 
     res.json({
       success: true,

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const connectDB = require('../config/db');
 let app; 
 
-let mongo; let baseToken; let email;
+let mongo; let email;
 
 beforeAll(async () => {
   process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';

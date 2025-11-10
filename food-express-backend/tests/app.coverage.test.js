@@ -10,23 +10,23 @@ let mongo;
 let token;
 
 beforeAll(async () => {
-	process.env.RAZORPAY_MOCK = 'true';
-	process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
-	process.env.RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'test_secret';
-	process.env.RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'rzp_test_key';
+  process.env.RAZORPAY_MOCK = 'true';
+  process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
+  process.env.RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || 'test_secret';
+  process.env.RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || 'rzp_test_key';
 
-	mongo = await MongoMemoryServer.create();
-	process.env.MONGO_URI = mongo.getUri();
-	await connectDB();
+  mongo = await MongoMemoryServer.create();
+  process.env.MONGO_URI = mongo.getUri();
+  await connectDB();
 
-	// require app after env is set
-	app = require('../app');
+  // require app after env is set
+  app = require('../app');
 
-	// register + login to get token
-	const email = `jest_${Date.now()}@ex.com`;
-	await request(app).post('/api/auth/register').send({ name: 'Jest', email, password: 'Pass1234' });
-	const login = await request(app).post('/api/auth/login').send({ email, password: 'Pass1234' });
-	token = login.body.token;
+  // register + login to get token
+  const email = `jest_${Date.now()}@ex.com`;
+  await request(app).post('/api/auth/register').send({ name: 'Jest', email, password: 'Pass1234' });
+  const login = await request(app).post('/api/auth/login').send({ email, password: 'Pass1234' });
+  token = login.body.token;
 });
 
 afterAll(async () => {
