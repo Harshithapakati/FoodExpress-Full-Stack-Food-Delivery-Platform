@@ -78,6 +78,7 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/device-token', require('./routes/deviceToken'));
 app.use('/api/notify', require('./routes/notify'));
 app.use('/api/partner', require('./routes/partner')); // ✅ restored
+app.use('/api/payment', require('./routes/payment')); // payment (Razorpay) routes
 
 // ✅ Firebase initialization (only ONCE)
 try {
