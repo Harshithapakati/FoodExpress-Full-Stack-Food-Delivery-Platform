@@ -88,11 +88,14 @@ describe('services/api environment resolution', () => {
     global.eval = jest.fn(() => 'http://logged:7000');
     delete process.env.VITE_API_ROOT;
     delete global.VITE_API_ROOT;
-    const mockLog = jest.fn();
-    global.window = { console: { log: mockLog } };
+    // The module prints to the global console.log; spy on that instead of
+    // window.console to capture the output reliably in Jest.
+    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    global.window = { console: { log: jest.fn() } };
 
     const mod = require(modulePath);
     expect(mod.API_ROOT).toBe('http://logged:7000');
-    expect(mockLog).toHaveBeenCalledWith('[API] Using API_ROOT =', 'http://logged:7000');
+    expect(spy).toHaveBeenCalledWith('[API] Using API_ROOT =', 'http://logged:7000');
+    spy.mockRestore();
   });
 });
