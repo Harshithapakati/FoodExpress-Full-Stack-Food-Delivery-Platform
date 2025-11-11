@@ -25,7 +25,20 @@ export const API = `${API_ROOT}/api`;
 
 // Helpful runtime debug: prints which API root the app is using in the browser console.
 // This is intentionally lightweight and will be tree-shaken away in production builds.
-if (typeof window !== 'undefined' && window?.console?.log) {
+// Prefer calling window.console.log when available (so tests that mock it see the call).
+// Also call the global console.log as a fallback/secondary sink so the message
+// appears in environments where window isn't present.
+// If a `window.console.log` is available (test or browser), call it so that
+// tests that mock `window.console.log` receive the call. Otherwise use the
+// global console.log (Node / non-window environments).
+if (typeof window !== 'undefined' && window?.console && typeof window.console.log === 'function') {
+	try {
+		window.console.log('[API] Using API_ROOT =', API_ROOT);
+	} catch (e) {
+		// If calling window.console.log throws for any reason, silently ignore
+		// to avoid breaking the app (logging is diagnostic only).
+	}
+} else {
 	// eslint-disable-next-line no-console
 	console.log('[API] Using API_ROOT =', API_ROOT);
 }
