@@ -55,7 +55,7 @@ const Login = () => {
             email: payload.email,
             name: payload.email?.split('@')[0] || '',
             userId: payload.id || payload.userId || null,
-            role: payload.role || 'customer'
+            role: payload.role || 'user'
           };
 
           localStorage.setItem('user', JSON.stringify(userObj));

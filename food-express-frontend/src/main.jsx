@@ -90,7 +90,7 @@ function showInAppToast(title, message, timeout = 5000) {
   }
 }
 
-// Use onForegroundMessage to always show in-app toast too
+// Always show in-app toast for foreground messages
 try {
   onForegroundMessage((payload) => {
     const title = payload.notification?.title || payload.data?.title || 'FoodExpress';
@@ -99,7 +99,9 @@ try {
   });
 } catch (_) {}
 
-// ✅ Added from HEAD: background SW messages → in-app toast
+
+// ✅ ✅ MERGED CLEANLY — kept BOTH versions’ meaning
+// Listen for messages posted from the service worker (background pushes)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (event) => {
     try {

@@ -48,6 +48,7 @@ router.post('/place', auth, async (req, res) => {
 
       try {
         const user = await User.findById(order.userId);
+
         if (user && user.email) {
           await sendOrderConfirmation(user.email, order);
           console.log('Order confirmation email sent to', user.email);
@@ -57,33 +58,32 @@ router.post('/place', auth, async (req, res) => {
           console.warn('Firebase init skipped or failed:', e.message);
         }
 
-        try {
-          if (user && user.fcmToken) {
-            const message = {
-              token: user.fcmToken,
-              notification: {
-                title: 'Order Placed',
-                body: `Your order ${order._id} has been placed successfully.`
-              },
-              data: {
-                orderId: order._id.toString(),
-                status: order.status || 'received',
-                url: `/order-history?orderId=${order._id}`
-              }
-            };
+        if (user && user.fcmToken) {
+          const message = {
+            token: user.fcmToken,
+            notification: {
+              title: 'Order Placed',
+              body: `Your order ${order._id} has been placed successfully.`
+            },
+            data: {
+              orderId: order._id.toString(),
+              status: order.status || 'received',
+              url: `/order-history?orderId=${order._id}`
+            }
+          };
 
-            const sendResp = await admin.messaging().send(message);
-            console.log('Sent FCM order-placement messageId:', sendResp);
-          }
-        } catch (fcmErr) {
-          console.error('FCM send error:', fcmErr);
-          if (
-            fcmErr?.errorInfo?.code === 'messaging/registration-token-not-registered' &&
-            user
-          ) {
-            console.log('Removing invalid fcmToken for user:', user.id || user._id);
-            user.fcmToken = null;
-            await user.save();
+          try {
+            const resp = await admin.messaging().send(message);
+            console.log('Sent FCM order-placement messageId:', resp);
+          } catch (fcmErr) {
+            console.error('FCM send error:', fcmErr);
+            if (
+              fcmErr?.errorInfo?.code === 'messaging/registration-token-not-registered' &&
+              user
+            ) {
+              user.fcmToken = null;
+              await user.save();
+            }
           }
         }
       } catch (emailErr) {
@@ -143,7 +143,9 @@ router.put('/:id/status', auth, async (req, res) => {
       console.warn('Firebase init skipped or failed:', e.message);
     }
 
-    // --- merged notification logic from both branches ---
+    // -------------------------------
+    // ✅ Final merged notifications
+    // -------------------------------
     const user = await User.findById(order.userId);
 
     if (user && user.fcmToken) {
@@ -152,12 +154,13 @@ router.put('/:id/status', auth, async (req, res) => {
         user.fcmToken ? user.fcmToken.substring(0, 8) + '...' : 'none'
       );
 
-      let notificationPayload = {};
       const data = {
         orderId: order._id.toString(),
         status,
         url: `/order-history?orderId=${order._id}`
       };
+
+      let notificationPayload = {};
 
       if (status === 'reached_restaurant') {
         const restaurantName = order.restaurantName || '';
@@ -189,7 +192,6 @@ router.put('/:id/status', auth, async (req, res) => {
           err?.errorInfo?.code === 'messaging/registration-token-not-registered' &&
           user
         ) {
-          console.log('Removing invalid fcmToken for user:', user.id || user._id);
           user.fcmToken = null;
           await user.save();
         }
