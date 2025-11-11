@@ -14,7 +14,9 @@ export function CartProvider({ children }) {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-  const res = await fetch(`${API}/cart`, {
+  // include token in query string as a fallback for environments where headers
+  // might be stripped; still include Authorization header as normal.
+  const res = await fetch(`${API}/cart?token=${encodeURIComponent(token)}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

@@ -70,7 +70,8 @@ function ViewMenu() {
           price: item.price,
           image: item.image,
           restaurantId: item.restaurantId,
-          restaurantName: item.restaurantName || restaurant.name
+            restaurantName: item.restaurantName || restaurant.name,
+            token
         })
       });
 
