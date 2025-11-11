@@ -1,16 +1,16 @@
 const mongoose = require('mongoose');
 
 const cartItemSchema = new mongoose.Schema({
-  menuItemId: { 
-    type: mongoose.Schema.Types.ObjectId, 
+  menuItemId: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'MenuItem',
-    required: true 
+    required: true
   },
   name: String,
   price: Number,
-  quantity: { 
-    type: Number, 
-    default: 1 
+  quantity: {
+    type: Number,
+    default: 1
   },
   image: String,
   restaurantId: String,
@@ -18,14 +18,15 @@ const cartItemSchema = new mongoose.Schema({
 });
 
 const cartSchema = new mongoose.Schema({
-  userId: { 
-    type: String, 
-    required: true 
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   items: [cartItemSchema],
-  updatedAt: { 
-    type: Date, 
-    default: Date.now 
+  updatedAt: {
+    type: Date,
+    default: Date.now
   }
 });
 

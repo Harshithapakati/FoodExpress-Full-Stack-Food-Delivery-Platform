@@ -1,0 +1,129 @@
+/* AdminDashboardStats.css */
+
+/* Layout */
+.admin-stats-panel-flex {
+  display: flex;
+  gap: 32px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(226,55,68,0.08);
+  padding: 32px 42px;
+  margin-bottom: 40px;
+  min-width: 720px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Sidebar */
+.stats-sidebar {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: linear-gradient(180deg, #e23744 90%, #c22d37 100%);
+  border-radius: 14px;
+  padding: 16px 10px;
+  min-width: 150px;
+  box-shadow: 0 2px 8px rgba(226,55,68,0.11);
+}
+
+.stats-sidebar-option {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: transparent;
+  color: #ffdfdf;
+  font-size: 1.13rem;
+  cursor: pointer;
+  padding: 9px 10px 9px 12px;
+  border-radius: 8px;
+  margin-bottom: 9px;
+  transition: background .2s, color .2s, box-shadow .2s;
+  font-weight: 500;
+}
+
+.stats-sidebar-option.selected {
+  background: #fff;
+  color: #e23744;
+  font-weight: 700;
+  box-shadow: 0 2px 12px #f2c2c7b2;
+}
+
+.sidebar-icon {
+  font-size: 1.36rem;
+}
+
+.sidebar-label {
+  font-size: 1.01rem;
+}
+
+/* Main stats area */
+.stats-main-content {
+  flex: 1;
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 34px;
+  min-width: 350px;
+}
+
+.stats-main-content h2 {
+  color: #e23744;
+  margin-bottom: 18px;
+  font-weight: 700;
+  font-size: 1.6rem;
+}
+
+/* Stats summary cards */
+.stats-summary {
+  display: flex;
+  gap: 38px;
+  margin-bottom: 32px;
+  font-weight: 600;
+}
+.stats-summary div {
+  flex: 1;
+  font-size: 1.16rem;
+  color: #e23744;
+  background: #fff3f5;
+  border-radius: 8px;
+  padding: 13px 0;
+  text-align: center;
+  box-shadow: 0 1px 5px #f7c4c8;
+}
+.stats-summary div strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 1.18rem;
+  color: #c22d37;
+}
+.admin-stats-summary-value {
+  font-size: 1.8rem;
+  color: #e23744;
+  margin-top: 3px;
+  font-weight: bold;
+}
+
+.admin-stats-error,
+.admin-stats-loading {
+  color: #e23744;
+  font-size: 1.17rem;
+  text-align: center;
+  padding: 17px;
+}
+
+/* Chart area */
+.stats-main-content .chartjs-render-monitor {
+  background: transparent;
+  margin-top: 10px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .admin-stats-panel-flex {
+    flex-direction: column;
+    padding: 16px 8px;
+    min-width: unset;
+  }
+  .stats-main-content { padding: 20px 12px; }
+  .stats-sidebar { min-width: unset; flex-direction: row; }
+  .stats-sidebar-option { margin-bottom: 0; margin-right: 12px; }
+  .stats-summary { gap: 18px; }
+}
