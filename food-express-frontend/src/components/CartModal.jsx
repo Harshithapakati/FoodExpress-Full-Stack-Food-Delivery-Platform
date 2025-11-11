@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CartModal.css';
+import { API } from '../services/api';
 
 function CartModal({ onClose, updateCartCount }) {
   const [cart, setCart] = useState(null);
@@ -14,10 +15,15 @@ function CartModal({ onClose, updateCartCount }) {
   const fetchCart = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/cart', {
+      // Try header first, then fallback to query-param if needed
+      let response = await fetch(`${API}/cart`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await response.json();
+      let data = await response.json();
+      if (response.status === 401) {
+        response = await fetch(`${API}/cart?token=${encodeURIComponent(token)}`);
+        data = await response.json();
+      }
       if (data.success) {
         setCart(data.cart);
         console.log('Cart data fetched in modal:', data.cart);
@@ -31,13 +37,13 @@ function CartModal({ onClose, updateCartCount }) {
   const updateQuantity = async (itemId, newQuantity) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/cart/update/${itemId}`, {
+      const response = await fetch(`${API}/cart/update/${itemId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ quantity: newQuantity })
+        body: JSON.stringify({ quantity: newQuantity, token })
       });
       const data = await response.json();
       if (data.success) {
@@ -52,9 +58,10 @@ function CartModal({ onClose, updateCartCount }) {
   const removeItem = async (itemId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/cart/remove/${itemId}`, {
+      const response = await fetch(`${API}/cart/remove/${itemId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ token })
       });
       const data = await response.json();
       if (data.success) {
@@ -70,9 +77,10 @@ function CartModal({ onClose, updateCartCount }) {
     if (!window.confirm('Are you sure you want to clear your cart?')) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/cart/clear', {
+      const response = await fetch(`${API}/cart/clear`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ token })
       });
       const data = await response.json();
       if (data.success) {

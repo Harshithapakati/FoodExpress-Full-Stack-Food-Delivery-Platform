@@ -7,6 +7,7 @@ import BrowseRestaurants from './components/BrowseRestaurants';
 import ViewMenu from './components/ViewMenu';
 import CheckoutPage from './components/CheckoutPage';
 import OrderHistory from './components/OrderHistory';
+import PartnerDashboard from './components/PartnerDashboard';
 import './App.css';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
           <Route path="/menu" element={<ViewMenu />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-history" element={<OrderHistory />} />
+          <Route path="/partner" element={<PartnerDashboard />} />
         </Routes>
       </div>
     </Router>

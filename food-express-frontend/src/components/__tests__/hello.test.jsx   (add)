@@ -1,0 +1,5 @@
+const API_ROOT = exports.API_ROOT = process.env.VITE_API_ROOT || 'http://localhost:5000';
+
+test('hello world!', () => {
+	expect(true).toBe(true);
+});

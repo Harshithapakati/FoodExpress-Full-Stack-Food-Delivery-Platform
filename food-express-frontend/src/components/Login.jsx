@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
+import { requestAndRegisterToken } from '../services/notificationService';
+import firebaseConfig from '../services/firebaseConfig';
 import '../styles/Auth.css';
 
 const Login = () => {
@@ -11,7 +13,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
-  
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -25,29 +27,72 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     const result = await authService.login(formData.email, formData.password);
-    
+
     if (result.success) {
       setMessage('Login successful! Welcome to FoodHub!');
       setMessageType('success');
-      // Store user data for BrowseRestaurants component
-      try {
-        const payload = JSON.parse(atob(result.token.split('.')[1]));
-        const userObj = { email: payload.email, name: payload.email.split('@')[0], userId: payload.userId };
+
+      const token = result.data?.token || result.token;
+      if (token) localStorage.setItem('token', token);
+
+      // unified userObj used later for redirect
+      let userObj = null;
+
+      // CASE 1 — backend returned user
+      if (result.data?.user) {
+        userObj = result.data.user;
         localStorage.setItem('user', JSON.stringify(userObj));
-      } catch (e) {
-        console.error('Error parsing token:', e);
       }
-      // Redirect to browse restaurants after successful login
+
+      // CASE 2 — no user object, extract from JWT
+      else if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+
+          userObj = {
+            email: payload.email,
+            name: payload.email?.split('@')[0] || '',
+            userId: payload.id || payload.userId || null,
+            role: payload.role || 'user'
+          };
+
+          localStorage.setItem('user', JSON.stringify(userObj));
+        } catch (e) {
+          // ignore token parse error
+        }
+      }
+
+      // Notification registration
+      try {
+        if (firebaseConfig && typeof window !== 'undefined') {
+          const reg = await requestAndRegisterToken(firebaseConfig);
+          console.log('Notification registration result:', reg);
+        }
+      } catch (e) {
+        console.warn('Notification registration failed:', e.message);
+      }
+
+      // Redirect (partner → /partner, otherwise /browse)
       setTimeout(() => {
+        try {
+          const storedUser = userObj || JSON.parse(localStorage.getItem('user') || 'null');
+          if (storedUser && storedUser.role === 'partner') {
+            navigate('/partner');
+            return;
+          }
+        } catch {}
+
         navigate('/browse');
       }, 1500);
-    } else {
+    }
+
+    else {
       setMessage(result.message);
       setMessageType('error');
     }
-    
+
     setLoading(false);
   };
 
@@ -66,7 +111,7 @@ const Login = () => {
               {message}
             </div>
           )}
-          
+
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input

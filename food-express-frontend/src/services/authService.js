@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { API } from './api';
 
-const API_BASE_URL = 'http://localhost:5001/api/auth';
+const API_BASE_URL = `${API}/auth`;
 
 const authService = {
   register: async (email, password) => {
@@ -28,8 +29,9 @@ const authService = {
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
       }
-      
-      return { success: true, token: response.data.token };
+
+      // Return response data as `data` so callers can check for `data.user`
+      return { success: true, token: response.data.token, data: response.data };
     } catch (error) {
       return {
         success: false,
@@ -86,8 +88,24 @@ const authService = {
     }
   },
 
-  logout: () => {
-    localStorage.removeItem('token');
+  logout: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        // best-effort: tell backend to clear the device token for this user
+        await fetch(`${API.replace(/\/api$/, '')}/device-token`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        });
+      }
+    } catch (e) {
+      // ignore errors on logout
+    } finally {
+      localStorage.removeItem('token');
+    }
   }
 };
 
