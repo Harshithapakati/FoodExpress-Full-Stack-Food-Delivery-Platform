@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './OrderHistory.css';
+import { API } from '../services/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 function OrderHistory() {
@@ -21,7 +22,7 @@ function OrderHistory() {
     setLoading(true);
     const token = localStorage.getItem('token');
 
-    const res = await fetch('http://localhost:5001/api/orders/history', {
+  const res = await fetch(`${API}/orders/history`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
@@ -38,7 +39,7 @@ function OrderHistory() {
     try {
       // Step 1: request backend to create new Razorpay order
       const retryRes = await fetch(
-        `http://localhost:5001/api/payment/retry/${order._id}`,
+        `${API}/payment/retry/${order._id}`,
         {
           method: 'POST',
           headers: {
@@ -62,7 +63,7 @@ function OrderHistory() {
         handler: async function (response) {
           try {
             const verifyRes = await fetch(
-              `http://localhost:5001/api/payment/retry-verify/${order._id}`,
+              `${API}/payment/retry-verify/${order._id}`,
               {
                 method: 'POST',
                 headers: {

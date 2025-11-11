@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-const API_BASE = 'http://localhost:5000/api/partner';
+import { API } from '../services/api';
+const API_BASE = `${API}/partner`;
 
 function PartnerDashboard() {
   const [available, setAvailable] = useState([]);

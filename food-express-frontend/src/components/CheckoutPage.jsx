@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useCart } from "./CartContext";
 import { useNavigate } from "react-router-dom";
 import "./CheckoutPage.css";
+import { API } from '../services/api';
 
 function PaymentPage({ onBack }) {
   return (
@@ -89,7 +90,7 @@ export default function CheckoutPage() {
     // ✅ CASH ON DELIVERY FLOW
     if (payMethod === "cash") {
       try {
-        const orderRes = await fetch("http://localhost:5001/api/orders/place", {
+  const orderRes = await fetch(`${API}/orders/place`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -102,7 +103,7 @@ export default function CheckoutPage() {
         if (!orderData.success)
           throw new Error(orderData.error || "Order placement failed");
 
-        await fetch("http://localhost:5001/api/cart/clear", {
+  await fetch(`${API}/cart/clear`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -118,7 +119,7 @@ export default function CheckoutPage() {
     // ✅ RAZORPAY CARD PAYMENT FLOW
     if (payMethod === "card") {
       try {
-        const orderRes = await fetch("http://localhost:5001/api/payment/order", {
+  const orderRes = await fetch(`${API}/payment/order`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -141,7 +142,7 @@ export default function CheckoutPage() {
 
           handler: async function (response) {
             try {
-              const verifyRes = await fetch("http://localhost:5001/api/payment/verify", {
+              const verifyRes = await fetch(`${API}/payment/verify`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
@@ -158,7 +159,7 @@ export default function CheckoutPage() {
               const verifyData = await verifyRes.json();
 
               if (verifyData.success) {
-                await fetch("http://localhost:5001/api/cart/clear", {
+                await fetch(`${API}/cart/clear`, {
                   method: "DELETE",
                   headers: { Authorization: `Bearer ${token}` }
                 });

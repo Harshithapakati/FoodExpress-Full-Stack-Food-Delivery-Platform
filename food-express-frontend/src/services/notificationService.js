@@ -6,6 +6,7 @@ import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { VAPID_KEY } from './firebaseConfig';
 import axios from 'axios';
+import { API } from './api';
 
 let messaging;
 
@@ -37,7 +38,7 @@ export async function requestAndRegisterToken(firebaseConfig) {
     if (!token) return { success: false, message: 'No token received' };
 
     // send to backend to save against user
-    await axios.post('http://localhost:5000/api/device-token', { token }, {
+  await axios.post(`${API}/device-token`, { token }, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }

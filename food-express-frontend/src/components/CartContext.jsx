@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { API } from '../services/api';
 
 const CartContext = createContext();
 
@@ -13,7 +14,7 @@ export function CartProvider({ children }) {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const res = await fetch('http://localhost:5001/api/cart', {
+  const res = await fetch(`${API}/cart`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -51,7 +52,7 @@ export function CartProvider({ children }) {
       }
       const token = localStorage.getItem('token');
       if (!token) return;
-      await fetch(`http://localhost:5001/api/cart/update/${itemId}`, {
+  await fetch(`${API}/cart/update/${itemId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -71,7 +72,7 @@ export function CartProvider({ children }) {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-      await fetch(`http://localhost:5001/api/cart/remove/${itemId}`, {
+  await fetch(`${API}/cart/remove/${itemId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './ViewMenu.css';
+import { API } from '../services/api';
 
 
 function ViewMenu() {
@@ -27,7 +28,7 @@ function ViewMenu() {
 
   const fetchMenu = async (restaurantId) => {
     try {
-      const response = await fetch(`http://localhost:5001/api/menu/${restaurantId}`);
+  const response = await fetch(`${API}/menu/${restaurantId}`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json(); 
       setRestaurant(data.restaurant);
@@ -57,7 +58,7 @@ function ViewMenu() {
 
 
     try {
-      const response = await fetch('http://localhost:5001/api/cart/add', {
+  const response = await fetch(`${API}/cart/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

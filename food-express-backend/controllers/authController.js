@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const { sendOTPEmail } = require('../utils/emailService');
 const { initFirebase, admin } = require('../firebase/admin');
-const { initFirebase, admin } = require('../firebase/admin');
 
 // Registration
 exports.register = async (req, res) => {
