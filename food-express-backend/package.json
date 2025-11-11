@@ -32,15 +32,12 @@
     "eslint-plugin-react": "^7.37.5",
     "globals": "^16.5.0",
     "jest": "^30.2.0",
+    "makeerror": "^1.0.12",
     "mongodb-memory-server": "^10.3.0",
+    "node-int64": "^0.4.0",
     "nodemon": "^3.1.10",
     "supertest": "^6.3.4"
-  }
-  ,
-  "overrides": {
-    "protobufjs": "7.2.5"
-  }
-  ,
+  },
   "overrides": {
     "protobufjs": "7.2.5"
   }
