@@ -88,8 +88,24 @@ const authService = {
     }
   },
 
-  logout: () => {
-    localStorage.removeItem('token');
+  logout: async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        // best-effort: tell backend to clear the device token for this user
+        await fetch(`${API.replace(/\/api$/, '')}/device-token`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          }
+        });
+      }
+    } catch (e) {
+      // ignore errors on logout
+    } finally {
+      localStorage.removeItem('token');
+    }
   }
 };
 

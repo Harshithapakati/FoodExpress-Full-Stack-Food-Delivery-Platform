@@ -115,10 +115,24 @@ function BrowseRestaurants() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setCartCount(0);
+    (async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (token) {
+          await fetch(`${API.replace(/\/api$/, '')}/device-token`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+          });
+        }
+      } catch (e) {
+        // ignore
+      } finally {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+        setCartCount(0);
+      }
+    })();
   };
 
   const updateCartCount = () => {

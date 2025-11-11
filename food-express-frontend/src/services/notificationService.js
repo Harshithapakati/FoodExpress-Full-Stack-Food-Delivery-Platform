@@ -3,7 +3,7 @@
 // `src/services/firebaseConfig.js` (create it with your project config).
 
 import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, deleteToken } from 'firebase/messaging';
 import { VAPID_KEY } from './firebaseConfig';
 import axios from 'axios';
 import { API } from './api';
@@ -34,17 +34,35 @@ export async function requestAndRegisterToken(firebaseConfig) {
       console.warn('Service worker registration failed:', swErr.message);
     }
 
-    const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swRegistration });
-    if (!token) return { success: false, message: 'No token received' };
-
-    // send to backend to save against user
-  await axios.post(`${API}/device-token`, { token }, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
+    // Try to force-refresh the token on each login: delete any existing token first
+    // so that subsequent getToken() returns a fresh token.
+    try {
+      const existing = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swRegistration });
+      if (existing) {
+        try {
+          await deleteToken(messaging);
+          // small delay to ensure deletion processed before requesting new token
+          await new Promise(r => setTimeout(r, 250));
+        } catch (delErr) {
+          console.warn('Failed to delete existing FCM token (non-fatal):', delErr && delErr.message ? delErr.message : delErr);
+        }
       }
-    });
 
-    return { success: true, token };
+      const token = await getToken(messaging, { vapidKey, serviceWorkerRegistration: swRegistration });
+      if (!token) return { success: false, message: 'No token received' };
+
+      // send to backend to save against user
+      await axios.post(`${API}/device-token`, { token }, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      return { success: true, token };
+    } catch (err2) {
+      console.error('Token refresh/get failed', err2);
+      return { success: false, message: err2?.message || 'Failed to get token' };
+    }
   } catch (err) {
     console.error('Request/register token failed', err.message);
     return { success: false, message: err.message };

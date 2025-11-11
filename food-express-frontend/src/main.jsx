@@ -19,6 +19,33 @@ try {
       const body = payload.notification?.body || payload.data?.body || '';
       const data = payload.data || {};
 
+      // Only show notifications intended for the current user or its role
+      const allowed = (() => {
+        try {
+          const stored = localStorage.getItem('user');
+          if (!stored) return false; // no logged-in user, don't show
+          const user = JSON.parse(stored);
+          // If payload targets a specific userId, only show if it matches
+          if (data.userId) {
+            const uid = String(data.userId);
+            const cur = String(user.userId || user.id || user._id || '');
+            return uid === cur;
+          }
+          // If payload targets partners, only show to partner role
+          if (data.target === 'partners' || data.for === 'partners') {
+            return (user.role || '').toLowerCase() === 'partner';
+          }
+          // If payload explicitly targets all, show
+          if (data.target === 'all' || data.for === 'all') return true;
+          // Otherwise default to not showing (safer)
+          return false;
+        } catch (e) {
+          return false;
+        }
+      })();
+
+      if (!allowed) return;
+
       if ('serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.getRegistration();
         if (reg && reg.showNotification) {
@@ -112,7 +139,26 @@ if ('serviceWorker' in navigator) {
         const payload = data.payload || {};
         const title = payload.notification?.title || payload.data?.title || 'FoodExpress';
         const body = payload.notification?.body || payload.data?.body || '';
-        showInAppToast(title, body || 'You have a new notification');
+        const pd = payload.data || {};
+
+        // Apply same filtering as foreground: only show if intended for current user/role/all
+        try {
+          const stored = localStorage.getItem('user');
+          const user = stored ? JSON.parse(stored) : null;
+          let allowedBg = false;
+          if (user) {
+            if (pd.userId) {
+              allowedBg = String(pd.userId) === String(user.userId || user.id || user._id || '');
+            } else if (pd.target === 'partners' || pd.for === 'partners') {
+              allowedBg = (user.role || '').toLowerCase() === 'partner';
+            } else if (pd.target === 'all' || pd.for === 'all') {
+              allowedBg = true;
+            }
+          }
+          if (allowedBg) showInAppToast(title, body || 'You have a new notification');
+        } catch (e) {
+          // silent
+        }
       }
     } catch (_) {}
   });

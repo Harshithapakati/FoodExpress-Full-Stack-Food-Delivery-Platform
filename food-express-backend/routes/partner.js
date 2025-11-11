@@ -15,7 +15,8 @@ async function notifyUserForOrder(order, title, body, extraData = {}) {
     const message = {
       token: user.fcmToken,
       notification: { title, body },
-      data: Object.assign({ orderId: order._id.toString(), status: order.status, url: `/order-history?orderId=${order._id}` }, extraData)
+      // include explicit userId so clients can filter notifications
+      data: Object.assign({ userId: order.userId?.toString?.() || String(order.userId), orderId: order._id.toString(), status: order.status, url: `/order-history?orderId=${order._id}` }, extraData)
     };
     const resp = await admin.messaging().send(message);
     console.log('Partner notify: FCM sent messageId:', resp);

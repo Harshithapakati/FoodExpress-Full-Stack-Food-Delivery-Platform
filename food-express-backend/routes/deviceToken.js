@@ -12,6 +12,13 @@ router.post('/', authenticate, async (req, res) => {
     console.log('Device token received:', token ? token.substring(0, 8) + '...' : 'none');
     if (!token) return res.status(400).json({ success: false, message: 'Token is required' });
 
+    // Ensure this token isn't assigned to any other user (avoid shared tokens)
+    try {
+      await User.updateMany({ fcmToken: token, _id: { $ne: req.user.userId } }, { $set: { fcmToken: null } });
+    } catch (dedupErr) {
+      console.warn('Failed to clear token from other users (non-fatal):', dedupErr);
+    }
+
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
@@ -68,4 +75,24 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
+// DELETE /api/device-token - clear saved device token for current user (logout)
+router.delete('/', authenticate, async (req, res) => {
+  try {
+    const userId = req.user && (req.user.id || req.user.userId);
+    if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    user.fcmToken = null;
+    await user.save();
+
+    return res.json({ success: true, message: 'Device token cleared' });
+  } catch (err) {
+    console.error('DELETE /api/device-token error:', err && err.message ? err.message : err);
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 module.exports = router;
+

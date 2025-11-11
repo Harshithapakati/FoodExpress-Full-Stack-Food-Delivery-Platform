@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { API } from '../services/api';
 const API_BASE = `${API}/partner`;
@@ -8,6 +9,7 @@ function PartnerDashboard() {
   const [assigned, setAssigned] = useState([]);
   const [loading, setLoading] = useState(true);
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchLists();
@@ -17,11 +19,21 @@ function PartnerDashboard() {
     setLoading(true);
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
     try {
-      const aRes = await fetch(`${API_BASE}/available`, { headers });
-      const aData = await aRes.json();
+      // try header first, then query-token fallback
+      let aRes = await fetch(`${API_BASE}/available`, { headers });
+      let aData = await aRes.json();
+      if (aRes.status === 401 || !aData.success) {
+        aRes = await fetch(`${API_BASE}/available?token=${encodeURIComponent(token)}`);
+        aData = await aRes.json();
+      }
       if (aData.success) setAvailable(aData.orders || []);
-      const sRes = await fetch(`${API_BASE}/assigned`, { headers });
-      const sData = await sRes.json();
+
+      let sRes = await fetch(`${API_BASE}/assigned`, { headers });
+      let sData = await sRes.json();
+      if (sRes.status === 401 || !sData.success) {
+        sRes = await fetch(`${API_BASE}/assigned?token=${encodeURIComponent(token)}`);
+        sData = await sRes.json();
+      }
       if (sData.success) setAssigned(sData.orders || []);
     } catch (err) {
       console.error('Failed to fetch partner lists', err);
@@ -33,8 +45,13 @@ function PartnerDashboard() {
   const accept = async (orderId) => {
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
     try {
-      const res = await fetch(`${API_BASE}/${orderId}/accept`, { method: 'POST', headers });
-      const data = await res.json();
+      let res = await fetch(`${API_BASE}/${orderId}/accept`, { method: 'POST', headers });
+      let data = await res.json();
+      if (res.status === 401 || !data.success) {
+        // try body fallback
+        res = await fetch(`${API_BASE}/${orderId}/accept?token=${encodeURIComponent(token)}`, { method: 'POST', headers });
+        data = await res.json();
+      }
       if (data.success) {
         fetchLists();
       } else {
@@ -49,8 +66,12 @@ function PartnerDashboard() {
   const advanceStatus = async (orderId, nextStatus) => {
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
     try {
-      const res = await fetch(`${API_BASE}/${orderId}/status`, { method: 'PUT', headers, body: JSON.stringify({ status: nextStatus }) });
-      const data = await res.json();
+      let res = await fetch(`${API_BASE}/${orderId}/status`, { method: 'PUT', headers, body: JSON.stringify({ status: nextStatus }) });
+      let data = await res.json();
+      if (res.status === 401 || !data.success) {
+        res = await fetch(`${API_BASE}/${orderId}/status?token=${encodeURIComponent(token)}`, { method: 'PUT', headers, body: JSON.stringify({ status: nextStatus, token }) });
+        data = await res.json();
+      }
       if (data.success) {
         fetchLists();
       } else {
@@ -102,7 +123,26 @@ function PartnerDashboard() {
   return (
     <div style={{ padding: '16px' }}>
       <h2>Delivery Partner Dashboard</h2>
-      <button onClick={fetchLists} style={{ marginBottom: '12px' }}>Refresh</button>
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+        <button onClick={fetchLists} style={{ marginRight: '12px' }}>Refresh</button>
+        <button onClick={async () => {
+          try {
+            const token = localStorage.getItem('token');
+            if (token) {
+              await fetch(`${API.replace(/\/api$/, '')}/device-token`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+              });
+            }
+          } catch (e) {
+            // ignore
+          } finally {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            navigate('/login');
+          }
+        }} style={{ marginRight: '12px' }}>Logout</button>
+      </div>
       {loading && <div>Loading...</div>}
 
       <h3>Available Orders</h3>

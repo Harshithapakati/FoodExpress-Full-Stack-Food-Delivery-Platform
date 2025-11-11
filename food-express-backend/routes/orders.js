@@ -66,6 +66,8 @@ router.post('/place', auth, async (req, res) => {
               body: `Your order ${order._id} has been placed successfully.`
             },
             data: {
+              // include userId so clients can filter notifications for the correct user
+              userId: (order.userId && order.userId.toString) ? order.userId.toString() : String(order.userId || user._id || user.id),
               orderId: order._id.toString(),
               status: order.status || 'received',
               url: `/order-history?orderId=${order._id}`
@@ -155,6 +157,8 @@ router.put('/:id/status', auth, async (req, res) => {
       );
 
       const data = {
+        // include userId so clients can filter notifications for the correct user
+        userId: (order.userId && order.userId.toString) ? order.userId.toString() : String(order.userId || ''),
         orderId: order._id.toString(),
         status,
         url: `/order-history?orderId=${order._id}`
