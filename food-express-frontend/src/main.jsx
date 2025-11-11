@@ -1,15 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
-import { CartProvider } from './components/CartContext'; // Import CartProvider
+import { CartProvider } from './components/CartContext';
 import './App.css';
 
-// Initialize firebase messaging foreground handler so onMessage shows a notification
+// Initialize firebase messaging foreground handler
 import firebaseConfig from './services/firebaseConfig';
 import { initFirebase, onForegroundMessage } from './services/notificationService';
 
 try {
   initFirebase(firebaseConfig);
+
   // display a system notification when the page is focused (foreground messages)
   onForegroundMessage(async (payload) => {
     try {
@@ -18,7 +19,6 @@ try {
       const body = payload.notification?.body || payload.data?.body || '';
       const data = payload.data || {};
 
-      // Prefer showing notification via service worker registration for consistent system notifications
       if ('serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.getRegistration();
         if (reg && reg.showNotification) {
@@ -27,7 +27,6 @@ try {
         }
       }
 
-      // Fallback: use the Notification API directly
       if (Notification.permission === 'granted') {
         new Notification(title, { body, data, icon: '/favicon.ico' });
       }
@@ -39,7 +38,7 @@ try {
   console.warn('Firebase init/onMessage setup failed:', e.message || e);
 }
 
-// Small DOM toast helper for in-app visible notifications (foreground)
+// Small DOM toast helper for visible in-app notifications
 function showInAppToast(title, message, timeout = 5000) {
   try {
     let container = document.getElementById('fe-toast-container');
@@ -71,6 +70,7 @@ function showInAppToast(title, message, timeout = 5000) {
     t.style.fontWeight = '600';
     t.style.marginBottom = '6px';
     t.textContent = title;
+
     const b = document.createElement('div');
     b.style.fontSize = '13px';
     b.textContent = message;
@@ -78,49 +78,41 @@ function showInAppToast(title, message, timeout = 5000) {
     toast.appendChild(t);
     toast.appendChild(b);
 
-    // remove on click
-    toast.addEventListener('click', () => {
-      toast.remove();
-    });
+    toast.addEventListener('click', () => toast.remove());
 
     container.appendChild(toast);
 
     setTimeout(() => {
-      try { toast.remove(); } catch (e) { }
+      try { toast.remove(); } catch (_) {}
     }, timeout);
   } catch (e) {
     console.warn('Failed to show in-app toast:', e);
   }
 }
 
-// Hook into foreground handler to always show an in-app toast as visible fallback
+// Use onForegroundMessage to always show in-app toast too
 try {
-  // Re-register a small wrapper to use the same onForegroundMessage
   onForegroundMessage((payload) => {
     const title = payload.notification?.title || payload.data?.title || 'FoodExpress';
     const body = payload.notification?.body || payload.data?.body || '';
     showInAppToast(title, body || 'You have a new notification');
   });
-} catch (e) {
-  // ignore if messaging not initialized
-}
+} catch (_) {}
 
-// Listen for messages posted from the service worker (background pushes)
+// ✅ Added from HEAD: background SW messages → in-app toast
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', (event) => {
     try {
       const data = event.data;
       if (!data) return;
+
       if (data.type === 'FCM_BACKGROUND_MESSAGE') {
         const payload = data.payload || {};
         const title = payload.notification?.title || payload.data?.title || 'FoodExpress';
         const body = payload.notification?.body || payload.data?.body || '';
-        // show an in-app toast so the user sees the message even if system notifications are suppressed
         showInAppToast(title, body || 'You have a new notification');
       }
-    } catch (err) {
-      // ignore message handling errors
-    }
+    } catch (_) {}
   });
 }
 

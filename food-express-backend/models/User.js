@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
+
     // OTP fields for password reset
     resetOTP: {
       type: String,
@@ -23,17 +24,19 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
     // FCM device token for push notifications (optional)
     fcmToken: {
       type: String,
       default: null,
     },
-    // role: 'customer' | 'partner' | 'admin'
+
+    // role: 'user' | 'partner' | 'admin'
     role: {
       type: String,
-      enum: ['customer', 'partner', 'admin'],
-      default: 'customer'
-    },
+      enum: ['user', 'partner', 'admin'],
+      default: 'user',
+    }
   },
   { timestamps: true }
 );

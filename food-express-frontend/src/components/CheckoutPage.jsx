@@ -39,10 +39,7 @@ export default function CheckoutPage() {
         }
       : null;
 
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.qty * item.price,
-    0
-  );
+  const subtotal = cartItems.reduce((sum, item) => sum + item.qty * item.price, 0);
   const delivery = subtotal > 500 ? 0 : 50;
   const taxes = Math.round(subtotal * 0.05);
   const total = subtotal + delivery + taxes;
@@ -50,13 +47,12 @@ export default function CheckoutPage() {
   const validate = () => {
     let currErrors = {};
     if (!address.name.trim()) currErrors.name = "Name is required";
-    if (!/^\d{10}$/.test(address.phone))
-      currErrors.phone = "Phone must be 10 digits";
+    if (!/^\d{10}$/.test(address.phone)) currErrors.phone = "Phone must be 10 digits";
     if (!address.house.trim()) currErrors.house = "House no./Flat is required";
     if (!address.street.trim()) currErrors.street = "Street/Area is required";
     if (!address.city.trim()) currErrors.city = "City is required";
-    if (!/^\d{6}$/.test(address.pincode))
-      currErrors.pincode = "Pincode must be 6 digits";
+    if (!/^\d{6}$/.test(address.pincode)) currErrors.pincode = "Pincode must be 6 digits";
+
     setErrors(currErrors);
     return Object.keys(currErrors).length === 0;
   };
@@ -93,17 +89,14 @@ export default function CheckoutPage() {
     // ✅ CASH ON DELIVERY FLOW
     if (payMethod === "cash") {
       try {
-        const orderRes = await fetch(
-          "http://localhost:5001/api/orders/place",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify(orderPayload)
-          }
-        );
+        const orderRes = await fetch("http://localhost:5001/api/orders/place", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(orderPayload)
+        });
 
         const orderData = await orderRes.json();
         if (!orderData.success)
@@ -122,20 +115,17 @@ export default function CheckoutPage() {
       return;
     }
 
-    // ✅ CARD PAYMENT FLOW (RAZORPAY)
+    // ✅ RAZORPAY CARD PAYMENT FLOW
     if (payMethod === "card") {
       try {
-        const orderRes = await fetch(
-          "http://localhost:5001/api/payment/order",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({ amount: totalAmount })
-          }
-        );
+        const orderRes = await fetch("http://localhost:5001/api/payment/order", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ amount: totalAmount })
+        });
 
         const orderData = await orderRes.json();
         if (!orderData.success)
@@ -151,22 +141,19 @@ export default function CheckoutPage() {
 
           handler: async function (response) {
             try {
-              const verifyRes = await fetch(
-                "http://localhost:5001/api/payment/verify",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                  },
-                  body: JSON.stringify({
-                    razorpay_order_id: response.razorpay_order_id,
-                    razorpay_payment_id: response.razorpay_payment_id,
-                    razorpay_signature: response.razorpay_signature,
-                    ...orderPayload
-                  })
-                }
-              );
+              const verifyRes = await fetch("http://localhost:5001/api/payment/verify", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  ...orderPayload
+                })
+              });
 
               const verifyData = await verifyRes.json();
 
@@ -190,23 +177,17 @@ export default function CheckoutPage() {
           prefill: {
             name: address.name,
             contact: address.phone,
-            email:
-              JSON.parse(localStorage.getItem("user") || "{}").email || ""
+            email: JSON.parse(localStorage.getItem("user") || "{}").email || ""
           },
 
           theme: {
             color: "#e23744"
-          },
-
-          modal: {
-            ondismiss: () => console.log("Payment modal closed")
-          },
-
-          method: { card: true }
+          }
         };
 
         const rzp = new window.Razorpay(options);
         rzp.open();
+        setPaymentStarted(true);
       } catch (err) {
         alert("Payment failed: " + err.message);
       }
@@ -215,8 +196,7 @@ export default function CheckoutPage() {
 
   const handleAddMore = () => {
     if (cartItems.length === 0) navigate("/browse");
-    else if (restaurantInfo?.id)
-      navigate(`/menu?id=${restaurantInfo.id}`);
+    else if (restaurantInfo?.id) navigate(`/menu?id=${restaurantInfo.id}`);
   };
 
   if (paymentStarted)
@@ -226,10 +206,7 @@ export default function CheckoutPage() {
     return (
       <div className="checkout-success-container">
         <h2>Order Placed!</h2>
-        <img
-          src="https://img.icons8.com/color/96/ok--v1.png"
-          alt="Success"
-        />
+        <img src="https://img.icons8.com/color/96/ok--v1.png" alt="Success" />
         <div>
           Your order has been placed successfully.
           <br />
@@ -248,9 +225,7 @@ export default function CheckoutPage() {
           {restaurantInfo ? (
             <div className="checkout-restaurant-header">
               <div>
-                <div className="checkout-restaurant-name">
-                  {restaurantInfo.name}
-                </div>
+                <div className="checkout-restaurant-name">{restaurantInfo.name}</div>
               </div>
             </div>
           ) : (
@@ -275,9 +250,7 @@ export default function CheckoutPage() {
                   <button
                     className="quantity-btn"
                     style={{ marginLeft: 8 }}
-                    onClick={() =>
-                      updateQuantity(item._id, Math.max(1, item.qty - 1))
-                    }
+                    onClick={() => updateQuantity(item._id, Math.max(1, item.qty - 1))}
                     disabled={item.qty <= 1}
                   >
                     −
@@ -311,9 +284,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="checkout-cart-item-price">
-                ₹{item.price * item.qty}
-              </div>
+              <div className="checkout-cart-item-price">₹{item.price * item.qty}</div>
             </div>
           ))}
 
@@ -342,99 +313,63 @@ export default function CheckoutPage() {
         </div>
 
         {/* ✅ RIGHT — ADDRESS + PAYMENT FORM */}
-        <form
-          className="checkout-form-section"
-          onSubmit={handlePlaceOrder}
-          noValidate
-        >
+        <form className="checkout-form-section" onSubmit={handlePlaceOrder} noValidate>
           <h2>Delivery Details</h2>
 
           <input
             required
             placeholder="Full name"
-            className={`checkout-input ${
-              errors.name ? "input-error" : ""
-            }`}
+            className={`checkout-input ${errors.name ? "input-error" : ""}`}
             value={address.name}
-            onChange={(e) =>
-              setAddress({ ...address, name: e.target.value })
-            }
+            onChange={(e) => setAddress({ ...address, name: e.target.value })}
           />
           {errors.name && <div className="error-msg">{errors.name}</div>}
 
           <input
             required
             placeholder="Phone number"
-            className={`checkout-input ${
-              errors.phone ? "input-error" : ""
-            }`}
+            className={`checkout-input ${errors.phone ? "input-error" : ""}`}
             value={address.phone}
-            onChange={(e) =>
-              setAddress({ ...address, phone: e.target.value })
-            }
+            onChange={(e) => setAddress({ ...address, phone: e.target.value })}
           />
-          {errors.phone && (
-            <div className="error-msg">{errors.phone}</div>
-          )}
+          {errors.phone && <div className="error-msg">{errors.phone}</div>}
 
           <input
             required
             placeholder="Flat/House no."
-            className={`checkout-input ${
-              errors.house ? "input-error" : ""
-            }`}
+            className={`checkout-input ${errors.house ? "input-error" : ""}`}
             value={address.house}
-            onChange={(e) =>
-              setAddress({ ...address, house: e.target.value })
-            }
+            onChange={(e) => setAddress({ ...address, house: e.target.value })}
           />
-          {errors.house && (
-            <div className="error-msg">{errors.house}</div>
-          )}
+          {errors.house && <div className="error-msg">{errors.house}</div>}
 
           <input
             required
             placeholder="Street/Area"
-            className={`checkout-input ${
-              errors.street ? "input-error" : ""
-            }`}
+            className={`checkout-input ${errors.street ? "input-error" : ""}`}
             value={address.street}
-            onChange={(e) =>
-              setAddress({ ...address, street: e.target.value })
-            }
+            onChange={(e) => setAddress({ ...address, street: e.target.value })}
           />
-          {errors.street && (
-            <div className="error-msg">{errors.street}</div>
-          )}
+          {errors.street && <div className="error-msg">{errors.street}</div>}
 
           <div className="checkout-city-pincode">
             <input
               required
               placeholder="City"
-              className={`checkout-input small-input ${
-                errors.city ? "input-error" : ""
-              }`}
+              className={`checkout-input small-input ${errors.city ? "input-error" : ""}`}
               value={address.city}
-              onChange={(e) =>
-                setAddress({ ...address, city: e.target.value })
-              }
+              onChange={(e) => setAddress({ ...address, city: e.target.value })}
             />
             <input
               required
               placeholder="Pincode"
-              className={`checkout-input small-input ${
-                errors.pincode ? "input-error" : ""
-              }`}
+              className={`checkout-input small-input ${errors.pincode ? "input-error" : ""}`}
               value={address.pincode}
-              onChange={(e) =>
-                setAddress({ ...address, pincode: e.target.value })
-              }
+              onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
             />
           </div>
           {errors.city && <div className="error-msg">{errors.city}</div>}
-          {errors.pincode && (
-            <div className="error-msg">{errors.pincode}</div>
-          )}
+          {errors.pincode && <div className="error-msg">{errors.pincode}</div>}
 
           <h2>Payment Method</h2>
           <div className="checkout-payment-methods">

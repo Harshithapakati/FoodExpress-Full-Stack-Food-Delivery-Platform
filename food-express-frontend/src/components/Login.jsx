@@ -13,7 +13,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
-  
+
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -27,33 +27,44 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     const result = await authService.login(formData.email, formData.password);
 
     if (result.success) {
       setMessage('Login successful! Welcome to FoodHub!');
       setMessageType('success');
 
-      // Store user/token returned by the service
       const token = result.data?.token || result.token;
       if (token) localStorage.setItem('token', token);
 
-      // If backend returned a user object, store it. Otherwise parse the JWT payload for role/email
+      // unified userObj used later for redirect
       let userObj = null;
+
+      // CASE 1 — backend returned user
       if (result.data?.user) {
         userObj = result.data.user;
         localStorage.setItem('user', JSON.stringify(userObj));
-      } else if (token) {
+      }
+
+      // CASE 2 — no user object, extract from JWT
+      else if (token) {
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
-          userObj = { email: payload.email, name: payload.email?.split('@')[0] || '', userId: payload.id || payload.userId || null, role: payload.role || 'customer' };
+
+          userObj = {
+            email: payload.email,
+            name: payload.email?.split('@')[0] || '',
+            userId: payload.id || payload.userId || null,
+            role: payload.role || 'customer'
+          };
+
           localStorage.setItem('user', JSON.stringify(userObj));
         } catch (e) {
-          // ignore parsing errors
+          // ignore token parse error
         }
       }
 
-      // Request notification permission and register device token (non-blocking)
+      // Notification registration
       try {
         if (firebaseConfig && typeof window !== 'undefined') {
           const reg = await requestAndRegisterToken(firebaseConfig);
@@ -63,7 +74,7 @@ const Login = () => {
         console.warn('Notification registration failed:', e.message);
       }
 
-      // Redirect: partners go to partner dashboard, others to browse
+      // Redirect (partner → /partner, otherwise /browse)
       setTimeout(() => {
         try {
           const storedUser = userObj || JSON.parse(localStorage.getItem('user') || 'null');
@@ -71,16 +82,17 @@ const Login = () => {
             navigate('/partner');
             return;
           }
-        } catch (e) {
-          // ignore parsing errors and fallback to browse
-        }
+        } catch {}
+
         navigate('/browse');
       }, 1500);
-    } else {
+    }
+
+    else {
       setMessage(result.message);
       setMessageType('error');
     }
-    
+
     setLoading(false);
   };
 
@@ -99,7 +111,7 @@ const Login = () => {
               {message}
             </div>
           )}
-          
+
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input

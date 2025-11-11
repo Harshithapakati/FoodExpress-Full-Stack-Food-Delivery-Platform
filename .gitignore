@@ -1,8 +1,11 @@
 # Environment variables
 .env
+*.env
 node_modules/
+**/node_modules/
 build/
 dist/
+<<<<<<< HEAD
 *.tsbuildinfo
 
 # Test coverage
@@ -12,3 +15,38 @@ coverage/
 
 # Logs
 *.log
+=======
+*.log
+
+# Backend/frontend envs
+food-express-backend/.env
+food-express-frontend/.env
+
+# Firebase service account (sensitive)
+food-express-backend/config/firebase-service-account.json
+config/firebase-service-account.json
+**/config/*service-account*.json
+
+# Vite / caches
+.vite/
+.vite-cache/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Misc
+public/build/
+coverage/
+*.local
+*.pem
+*.key
+*.p12
+>>>>>>> 06a49cb (feat: added push notifications and email invoice)
