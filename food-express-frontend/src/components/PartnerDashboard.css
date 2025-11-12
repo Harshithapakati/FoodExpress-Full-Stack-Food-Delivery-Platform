@@ -1,0 +1,95 @@
+/* PartnerDashboard.css */
+
+div {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+h2 {
+  font-size: 2rem;
+  margin-bottom: 24px;
+  color: #e23744; /* Your brand red */
+  font-weight: bold;
+}
+
+h3 {
+  font-size: 1.5rem;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  color: #e23744;
+  font-weight: 600;
+}
+
+button {
+  background-color: #e23744;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: #b72a35;
+}
+
+button:disabled,
+button[disabled] {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+button + button {
+  margin-left: 12px;
+}
+
+/* Container for refresh/logout buttons */
+div[style*="display: flex"] {
+  margin-bottom: 18px;
+}
+
+div[style*="border: 1px solid"], /* Order cards container */
+div[style*="borderRadius"] {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+ul {
+  padding-left: 18px;
+  margin-top: 6px;
+}
+
+ul li {
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+b {
+  color: #555;
+}
+
+div[style*="marginTop: 8px"] > b {
+  margin-right: 8px;
+  font-weight: 600;
+  color: #222;
+}
+
+/* Responsive layout and spacing */
+@media only screen and (max-width: 640px) {
+  button {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  div[style*="display: flex"] {
+    flex-direction: column;
+  }
+  div[style*="border: 1px solid"] {
+    padding: 12px 14px;
+  }
+}

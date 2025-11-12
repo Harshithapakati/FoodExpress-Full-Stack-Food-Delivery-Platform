@@ -9,13 +9,21 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-
     password: {
       type: String,
       required: true,
       minlength: 6,
     },
-
+    role: {
+      type: String,
+      enum: ['user', 'partner', 'admin'],   
+      default: 'user',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'blocked'],         
+      default: 'active'
+    },
     // OTP fields for password reset
     resetOTP: {
       type: String,
@@ -25,18 +33,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
-
     // FCM device token for push notifications (optional)
     fcmToken: {
       type: String,
       default: null,
-    },
-
-    // role: 'user' | 'partner' | 'admin'
-    role: {
-      type: String,
-      enum: ['user', 'partner', 'admin'],
-      default: 'user',
     }
   },
   { timestamps: true }

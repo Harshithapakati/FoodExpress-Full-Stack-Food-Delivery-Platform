@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './ViewMenu.css';
+import { FaArrowLeft } from 'react-icons/fa';
 import { API } from '../services/api';
 
 
@@ -110,6 +111,8 @@ function ViewMenu() {
       <header className="menu-header">
         <div className="header-content">
           <button className="back-btn" onClick={goBack}>
+          <FaArrowLeft style={{ marginRight: '6px' }} />
+           Back
           </button>
           <div className="logo">
             <h1>🍽️ FoodHub</h1>

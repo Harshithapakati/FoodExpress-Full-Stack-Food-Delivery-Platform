@@ -98,7 +98,8 @@
 }
 
 .back-button:hover {
-  color: #ed2d2d;
+  color: white;
+  background-color: none;
 }
 
 .order-status {

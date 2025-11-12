@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './PartnerDashboard.css';
+
 
 import { API } from '../services/api';
 const API_BASE = `${API}/partner`;

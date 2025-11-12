@@ -41,13 +41,28 @@ exports.login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ msg: 'Invalid email or password' });
 
+    // Admin accounts always allowed to login and status set active
+    if (user.role === 'admin') {
+      if (user.status !== 'active') {
+        user.status = 'active';
+        await user.save();
+      }
+    } else if (user.status === 'blocked') { // block non-admin blocked users
+      return res.status(403).json({ msg: 'account is blocked' });
+    }
+
+    // Generate JWT token
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role || 'user' 
+      },
       process.env.JWT_SECRET,
       { expiresIn: '2h' }
     );
 
-    // Try sending a push notification if a token exists
+    // Send welcome FCM notification if token exists
     (async () => {
       try {
         try { initFirebase(); } catch (e) {
@@ -69,14 +84,10 @@ exports.login = async (req, res) => {
             .then(mid => console.log('Sent welcome FCM messageId:', mid))
             .catch(async err => {
               console.warn('Welcome FCM error:', err);
-              try {
-                if (err?.errorInfo?.code === 'messaging/registration-token-not-registered') {
-                  console.log('Removing invalid fcmToken for user on login:', user.id);
-                  user.fcmToken = null;
-                  await user.save();
-                }
-              } catch (cleanupErr) {
-                console.warn('Failed to cleanup invalid fcmToken on login:', cleanupErr);
+              if (err?.errorInfo?.code === 'messaging/registration-token-not-registered') {
+                console.log('Removing invalid fcmToken for user on login:', user.id);
+                user.fcmToken = null;
+                await user.save();
               }
             });
         }
@@ -85,7 +96,7 @@ exports.login = async (req, res) => {
       }
     })();
 
-    // ✅ FINAL MERGED VERSION: return token + user object
+    // Return token and user details
     return res.json({
       token,
       user: {
@@ -94,13 +105,12 @@ exports.login = async (req, res) => {
         role: user.role
       }
     });
-
   } catch (err) {
     res.status(500).json({ msg: 'Server Error' });
   }
 };
 
-// Request Password Reset (Email OTP)
+// Forgot password - send OTP
 exports.forgotPassword = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty())
@@ -116,7 +126,7 @@ exports.forgotPassword = async (req, res) => {
     const hashedOTP = await bcrypt.hash(otp, 10);
 
     user.resetOTP = hashedOTP;
-    user.resetOTPExpires = Date.now() + 10 * 60 * 1000;
+    user.resetOTPExpires = Date.now() + 10 * 60 * 1000; // 10 mins
     await user.save();
 
     await sendOTPEmail(email, otp);
@@ -152,8 +162,7 @@ exports.verifyOTP = async (req, res) => {
     if (!isValidOTP)
       return res.status(400).json({ msg: 'Invalid OTP' });
 
-    return res.json({ msg: 'OTP verified successfully', verified: true });
-
+    res.json({ msg: 'OTP verified successfully', verified: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server Error' });

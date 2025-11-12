@@ -74,13 +74,20 @@ const Login = () => {
         console.warn('Notification registration failed:', e.message);
       }
 
-      // Redirect (partner → /partner, otherwise /browse)
+      // Redirect (admin → /admin, partner → /partner, otherwise /browse)
       setTimeout(() => {
         try {
           const storedUser = userObj || JSON.parse(localStorage.getItem('user') || 'null');
-          if (storedUser && storedUser.role === 'partner') {
-            navigate('/partner');
-            return;
+          if (storedUser) {
+            const role = (storedUser.role || '').toString().toLowerCase();
+            if (role === 'admin') {
+              navigate('/admin');
+              return;
+            }
+            if (role === 'partner') {
+              navigate('/partner');
+              return;
+            }
           }
         } catch {}
 

@@ -2,9 +2,7 @@ const mongoose = require('mongoose');
 
 const OrderSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-
   restaurantName: String,
-
   items: [
     {
       name: String,
@@ -13,23 +11,12 @@ const OrderSchema = new mongoose.Schema({
       image: String
     }
   ],
-
   deliveryAddress: String,
-
   paymentMethod: String,
-
-  // Unified status (avoid capitalisation mismatch)
-  status: { type: String, default: "placed" },
-
+  status: { type: String, default: "Placed" }, // Keep your capitalization
   totalAmount: Number,
-
-  // Razorpay order ID for card payments
   razorpayOrderId: String,
-
-  // Delivery partner (for delivery tracking)
   deliveryPartner: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
-
-  // Tracking timestamps for every milestone
   tracking: {
     accepted: { type: Date, default: null },
     reached_restaurant: { type: Date, default: null },
@@ -38,8 +25,7 @@ const OrderSchema = new mongoose.Schema({
     reached_destination: { type: Date, default: null },
     delivered: { type: Date, default: null }
   },
-
   createdAt: { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model("Order", OrderSchema);
+module.exports = mongoose.model('Order', OrderSchema);

@@ -6,14 +6,13 @@ const User = require('../models/User');
 const { initFirebase, admin } = require('../firebase/admin');
 const { sendOrderConfirmation } = require('../utils/emailService');
 
-// Place a new order
+// Place a new order with validation and proper notification handling
 router.post('/place', auth, async (req, res) => {
   try {
     console.log('Order payload received:', JSON.stringify(req.body));
     console.log('Authenticated user:', req.user);
 
     const { restaurantName, items, deliveryAddress, paymentMethod, totalAmount } = req.body;
-
     const missing = [];
     if (!restaurantName) missing.push('restaurantName');
     if (!items || !Array.isArray(items) || items.length === 0) missing.push('items');
@@ -48,16 +47,13 @@ router.post('/place', auth, async (req, res) => {
 
       try {
         const user = await User.findById(order.userId);
-
         if (user && user.email) {
           await sendOrderConfirmation(user.email, order);
           console.log('Order confirmation email sent to', user.email);
         }
-
         try { initFirebase(); } catch (e) {
           console.warn('Firebase init skipped or failed:', e.message);
         }
-
         if (user && user.fcmToken) {
           const message = {
             token: user.fcmToken,
@@ -66,14 +62,12 @@ router.post('/place', auth, async (req, res) => {
               body: `Your order ${order._id} has been placed successfully.`
             },
             data: {
-              // include userId so clients can filter notifications for the correct user
               userId: (order.userId && order.userId.toString) ? order.userId.toString() : String(order.userId || user._id || user.id),
               orderId: order._id.toString(),
               status: order.status || 'received',
               url: `/order-history?orderId=${order._id}`
             }
           };
-
           try {
             const resp = await admin.messaging().send(message);
             console.log('Sent FCM order-placement messageId:', resp);
@@ -119,7 +113,7 @@ router.post('/place', auth, async (req, res) => {
   }
 });
 
-// Fetch order history
+// Fetch order history for the logged-in user
 router.get('/history', auth, async (req, res) => {
   try {
     const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
@@ -145,9 +139,6 @@ router.put('/:id/status', auth, async (req, res) => {
       console.warn('Firebase init skipped or failed:', e.message);
     }
 
-    // -------------------------------
-    // ✅ Final merged notifications
-    // -------------------------------
     const user = await User.findById(order.userId);
 
     if (user && user.fcmToken) {
@@ -157,7 +148,6 @@ router.put('/:id/status', auth, async (req, res) => {
       );
 
       const data = {
-        // include userId so clients can filter notifications for the correct user
         userId: (order.userId && order.userId.toString) ? order.userId.toString() : String(order.userId || ''),
         orderId: order._id.toString(),
         status,
@@ -186,12 +176,10 @@ router.put('/:id/status', auth, async (req, res) => {
           notification: notificationPayload,
           data
         };
-
         const resp = await admin.messaging().send(message);
         console.log('Sent FCM messageId:', resp);
       } catch (err) {
         console.error('FCM send error:', err);
-
         if (
           err?.errorInfo?.code === 'messaging/registration-token-not-registered' &&
           user
@@ -202,7 +190,7 @@ router.put('/:id/status', auth, async (req, res) => {
       }
     }
 
-    // send email when confirmed
+    // Send email when order confirmed
     try {
       if (order.status?.toLowerCase() === 'confirmed') {
         if (user && user.email) {
