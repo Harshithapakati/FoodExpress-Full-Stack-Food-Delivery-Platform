@@ -7,8 +7,8 @@ import BrowseRestaurants from './components/BrowseRestaurants';
 import ViewMenu from './components/ViewMenu';
 import CheckoutPage from './components/CheckoutPage';
 import OrderHistory from './components/OrderHistory';
-import AdminPage from "./components/AdminPage";
-import RequireAdmin from "./components/RequireAdmin";
+import AdminPage from './components/AdminPage';
+import RequireAdmin from './components/RequireAdmin';
 import PartnerDashboard from './components/PartnerDashboard';
 import './App.css';
 
@@ -27,10 +27,10 @@ function App() {
           <Route path="/order-history" element={<OrderHistory />} />
           <Route path="/partner" element={<PartnerDashboard />} />
           <Route path="/admin" element={
-          <RequireAdmin>
-            <AdminPage />
-          </RequireAdmin>
-        }/>
+            <RequireAdmin>
+              <AdminPage />
+            </RequireAdmin>
+          }/>
         </Routes>
       </div>
     </Router>

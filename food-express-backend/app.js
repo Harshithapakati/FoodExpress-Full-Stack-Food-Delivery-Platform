@@ -44,6 +44,8 @@ app.use('/api/menu', require('./routes/menu'));
 app.use('/api/cart', require('./routes/cart'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/payment', require('./routes/payment'));
+app.use('/api/delivery', require('./routes/delivery'));
+
 
 // Health check
 app.get('/', (req, res) => res.send('API running!'));

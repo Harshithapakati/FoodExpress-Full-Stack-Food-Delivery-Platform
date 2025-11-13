@@ -10,6 +10,7 @@ module.exports = [
         // Add Jest globals for test files
         jest: 'readonly',
         describe: 'readonly',
+        it: 'readonly',
         test: 'readonly',
         expect: 'readonly',
         beforeAll: 'readonly',

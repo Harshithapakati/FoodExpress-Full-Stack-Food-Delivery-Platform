@@ -39,7 +39,7 @@ try {
           if (data.target === 'all' || data.for === 'all') return true;
           // Otherwise default to not showing (safer)
           return false;
-        } catch (e) {
+        } catch (_e) {
           return false;
         }
       })();
@@ -110,7 +110,7 @@ function showInAppToast(title, message, timeout = 5000) {
     container.appendChild(toast);
 
     setTimeout(() => {
-      try { toast.remove(); } catch (_) {}
+      try { toast.remove(); } catch (_e) {/* ignore */}
     }, timeout);
   } catch (e) {
     console.warn('Failed to show in-app toast:', e);
@@ -124,7 +124,7 @@ try {
     const body = payload.notification?.body || payload.data?.body || '';
     showInAppToast(title, body || 'You have a new notification');
   });
-} catch (_) {}
+} catch (_e) {/* ignore */}
 
 
 // ✅ ✅ MERGED CLEANLY — kept BOTH versions’ meaning
@@ -156,11 +156,11 @@ if ('serviceWorker' in navigator) {
             }
           }
           if (allowedBg) showInAppToast(title, body || 'You have a new notification');
-        } catch (e) {
+        } catch (_e) {
           // silent
         }
       }
-    } catch (_) {}
+    } catch (_e) {/* ignore */}
   });
 }
 

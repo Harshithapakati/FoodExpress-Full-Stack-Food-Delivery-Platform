@@ -14,9 +14,9 @@ export function CartProvider({ children }) {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-  // include token in query string as a fallback for environments where headers
-  // might be stripped; still include Authorization header as normal.
-  const res = await fetch(`${API}/cart?token=${encodeURIComponent(token)}`, {
+      // include token in query string as a fallback for environments where headers
+      // might be stripped; still include Authorization header as normal.
+      const res = await fetch(`${API}/cart?token=${encodeURIComponent(token)}`, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -54,7 +54,7 @@ export function CartProvider({ children }) {
       }
       const token = localStorage.getItem('token');
       if (!token) return;
-  await fetch(`${API}/cart/update/${itemId}`, {
+      await fetch(`${API}/cart/update/${itemId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ export function CartProvider({ children }) {
     try {
       const token = localStorage.getItem('token');
       if (!token) return;
-  await fetch(`${API}/cart/remove/${itemId}`, {
+      await fetch(`${API}/cart/remove/${itemId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`

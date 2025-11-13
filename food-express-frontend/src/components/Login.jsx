@@ -59,7 +59,7 @@ const Login = () => {
           };
 
           localStorage.setItem('user', JSON.stringify(userObj));
-        } catch (e) {
+        } catch (_e) {
           // ignore token parse error
         }
       }
@@ -89,7 +89,7 @@ const Login = () => {
               return;
             }
           }
-        } catch {}
+        } catch { /* ignore */ }
 
         navigate('/browse');
       }, 1500);

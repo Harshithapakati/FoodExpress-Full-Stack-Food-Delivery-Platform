@@ -47,7 +47,7 @@ function BrowseRestaurants() {
 
   const fetchCartCount = async (token) => {
     try {
-  const response = await fetch(`${API}/cart`, {
+      const response = await fetch(`${API}/cart`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -64,7 +64,7 @@ function BrowseRestaurants() {
 
   const fetchRestaurants = async () => {
     try {
-  const response = await fetch(`${API}/restaurants`);
+      const response = await fetch(`${API}/restaurants`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       setRestaurants(data.restaurants);
@@ -124,7 +124,7 @@ function BrowseRestaurants() {
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
           });
         }
-      } catch (e) {
+      } catch (_e) {
         // ignore
       } finally {
         localStorage.removeItem('token');

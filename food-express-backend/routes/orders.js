@@ -91,9 +91,9 @@ router.post('/place', auth, async (req, res) => {
       console.error('Order save failed:', saveErr);
       const details = saveErr.errors
         ? Object.keys(saveErr.errors).reduce((acc, k) => {
-            acc[k] = saveErr.errors[k].message;
-            return acc;
-          }, {})
+          acc[k] = saveErr.errors[k].message;
+          return acc;
+        }, {})
         : null;
 
       return res.status(400).json({

@@ -1,8 +1,8 @@
-const User = require("../models/User");
-const Restaurant = require("../models/Restaurant");
-const MenuItem = require("../models/MenuItem");
-const Order = require("../models/Order");
-const bcrypt = require("bcryptjs");
+const User = require('../models/User');
+const Restaurant = require('../models/Restaurant');
+const MenuItem = require('../models/MenuItem');
+const Order = require('../models/Order');
+const bcrypt = require('bcryptjs');
 
 // Development only - remove in production
 exports.createFirstAdmin = async (req, res) => {
@@ -12,7 +12,7 @@ exports.createFirstAdmin = async (req, res) => {
     if (existingAdmin) {
       return res.status(400).json({
         success: false,
-        message: "Admin user already exists"
+        message: 'Admin user already exists'
       });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -25,7 +25,7 @@ exports.createFirstAdmin = async (req, res) => {
     await admin.save();
     res.status(201).json({
       success: true,
-      message: "Admin user created successfully",
+      message: 'Admin user created successfully',
       admin: {
         email: admin.email,
         role: admin.role,
@@ -35,7 +35,7 @@ exports.createFirstAdmin = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error creating admin user",
+      message: 'Error creating admin user',
       error: error.message
     });
   }
@@ -43,22 +43,22 @@ exports.createFirstAdmin = async (req, res) => {
 
 exports.verifyAdmin = async (req, res) => {
   try {
-    res.json({ success: true, message: "Admin verified" });
+    res.json({ success: true, message: 'Admin verified' });
   } catch (error) {
-    res.status(401).json({ success: false, message: "Admin verification failed" });
+    res.status(401).json({ success: false, message: 'Admin verification failed' });
   }
 };
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: { $ne: 'admin' } }, "-password")
-      .select("email role status createdAt")
+    const users = await User.find({ role: { $ne: 'admin' } }, '-password')
+      .select('email role status createdAt')
       .sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error fetching users",
+      message: 'Error fetching users',
       error: error.message
     });
   }
@@ -89,7 +89,7 @@ exports.getAllRestaurants = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error fetching restaurants",
+      message: 'Error fetching restaurants',
       error: error.message
     });
   }
@@ -102,20 +102,20 @@ exports.updateUserStatus = async (req, res) => {
     if (!['active', 'blocked'].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid status value"
+        message: 'Invalid status value'
       });
     }
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: 'User not found'
       });
     }
     if (user.role === 'admin') {
       return res.status(403).json({
         success: false,
-        message: "Cannot change status of admin users"
+        message: 'Cannot change status of admin users'
       });
     }
     user.status = status;
@@ -131,7 +131,7 @@ exports.updateUserStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error updating user status",
+      message: 'Error updating user status',
       error: error.message
     });
   }
@@ -144,7 +144,7 @@ exports.updateRestaurantStatus = async (req, res) => {
     if (!['active', 'blocked'].includes(status)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid status value"
+        message: 'Invalid status value'
       });
     }
     const restaurant = await Restaurant.findByIdAndUpdate(
@@ -155,7 +155,7 @@ exports.updateRestaurantStatus = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({
         success: false,
-        message: "Restaurant not found"
+        message: 'Restaurant not found'
       });
     }
     res.json({
@@ -169,7 +169,7 @@ exports.updateRestaurantStatus = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error updating restaurant status",
+      message: 'Error updating restaurant status',
       error: error.message
     });
   }
@@ -188,7 +188,7 @@ exports.getRestaurantMenu = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Error fetching restaurant menu",
+      message: 'Error fetching restaurant menu',
       error: error.message
     });
   }
@@ -205,7 +205,7 @@ exports.getAdminStats = async (req, res) => {
 
     const totalOrderAgg = await Order.aggregate([
       { $match: { totalAmount: { $exists: true, $ne: null } } },
-      { $group: { _id: null, sum: { $sum: "$totalAmount" } } }
+      { $group: { _id: null, sum: { $sum: '$totalAmount' } } }
     ]);
     const totalOrderValue = totalOrderAgg[0]?.sum || 0;
     const totalRevenue = totalOrderValue * 0.2;
@@ -214,35 +214,35 @@ exports.getAdminStats = async (req, res) => {
     startDate.setHours(0, 0, 0, 0);
 
     switch(range) {
-      case '1m':
-        startDate.setMonth(startDate.getMonth() - 1);
-        break;
-      case '1y':
-        startDate.setFullYear(startDate.getFullYear() - 1);
-        break;
-      case '5y':
-        startDate.setFullYear(startDate.getFullYear() - 5);
-        break;
-      case '7d':
-      default:
-        startDate.setDate(startDate.getDate() - 6);
+    case '1m':
+      startDate.setMonth(startDate.getMonth() - 1);
+      break;
+    case '1y':
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      break;
+    case '5y':
+      startDate.setFullYear(startDate.getFullYear() - 5);
+      break;
+    case '7d':
+    default:
+      startDate.setDate(startDate.getDate() - 6);
     }
 
     const dailyStatsRaw = await Order.aggregate([
       { $match: { 
-          createdAt: { $gte: startDate },
-          totalAmount: { $exists: true, $ne: null } 
-        } 
+        createdAt: { $gte: startDate },
+        totalAmount: { $exists: true, $ne: null } 
+      } 
       },
       {
         $group: {
           _id: { 
             $dateToString: {
-              format: (range === '1y' || range === '5y') ? "%Y-%m" : "%Y-%m-%d", 
-              date:  "$createdAt"
+              format: (range === '1y' || range === '5y') ? '%Y-%m' : '%Y-%m-%d', 
+              date:  '$createdAt'
             }
           },
-          orderValue: { $sum: "$totalAmount" },
+          orderValue: { $sum: '$totalAmount' },
           orders: { $sum: 1 }
         }
       },
@@ -262,6 +262,6 @@ exports.getAdminStats = async (req, res) => {
       daily: dailyStats
     });
   } catch (e) {
-    res.status(500).json({ message: "Failed to fetch stats" });
+    res.status(500).json({ message: 'Failed to fetch stats' });
   }
 };

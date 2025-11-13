@@ -72,8 +72,8 @@ router.post('/:orderId/accept', auth, requireRole('partner'), async (req, res) =
     order.tracking.accepted = new Date();
     await order.save();
 
-  // notify user
-  await notifyUserForOrder(order, 'Order Accepted', `Your order ${order._id} has been accepted by a delivery partner.`);
+    // notify user
+    await notifyUserForOrder(order, 'Order Accepted', `Your order ${order._id} has been accepted by a delivery partner.`);
 
     res.json({ success: true, order });
   } catch (err) {
@@ -101,7 +101,7 @@ router.put('/:orderId/status', auth, requireRole('partner'), async (req, res) =>
 
     await order.save();
 
-  // notify user
+    // notify user
     // Compose readable status and include restaurant name for reached_restaurant
     let human = status.replace(/_/g, ' ');
     let body = `Your order ${order._id} status: ${human}`;
@@ -111,7 +111,7 @@ router.put('/:orderId/status', auth, requireRole('partner'), async (req, res) =>
       const restaurantName = order.restaurantName || '';
       const reachedText = `reached restaurant ${restaurantName}`;
       human = reachedText;
-      title = `Order update`;
+      title = 'Order update';
       body = `Your order ${order._id} ${reachedText}`;
       await notifyUserForOrder(order, title, body, { reached_restaurant: restaurantName });
     } else {

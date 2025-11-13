@@ -29,7 +29,7 @@ function ViewMenu() {
 
   const fetchMenu = async (restaurantId) => {
     try {
-  const response = await fetch(`${API}/menu/${restaurantId}`);
+      const response = await fetch(`${API}/menu/${restaurantId}`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json(); 
       setRestaurant(data.restaurant);
@@ -59,7 +59,7 @@ function ViewMenu() {
 
 
     try {
-  const response = await fetch(`${API}/cart/add`, {
+      const response = await fetch(`${API}/cart/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,8 +71,8 @@ function ViewMenu() {
           price: item.price,
           image: item.image,
           restaurantId: item.restaurantId,
-            restaurantName: item.restaurantName || restaurant.name,
-            token
+          restaurantName: item.restaurantName || restaurant.name,
+          token
         })
       });
 
@@ -111,7 +111,7 @@ function ViewMenu() {
       <header className="menu-header">
         <div className="header-content">
           <button className="back-btn" onClick={goBack}>
-          <FaArrowLeft style={{ marginRight: '6px' }} />
+            <FaArrowLeft style={{ marginRight: '6px' }} />
            Back
           </button>
           <div className="logo">

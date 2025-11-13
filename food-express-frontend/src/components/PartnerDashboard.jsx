@@ -136,7 +136,7 @@ function PartnerDashboard() {
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
               });
             }
-          } catch (e) {
+          } catch (_e) {
             // ignore
           } finally {
             localStorage.removeItem('token');

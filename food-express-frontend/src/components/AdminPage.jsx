@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "./AdminPage.css";
-import MenuModal from "./MenuModal";
-import AdminDashboardStats from "./AdminDashboardStats";  // <-- Import the stats panel
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './AdminPage.css';
+import MenuModal from './MenuModal';
+import AdminDashboardStats from './AdminDashboardStats';  // <-- Import the stats panel
 
 function AdminPage() {
   const [users, setUsers] = useState([]);
@@ -25,7 +25,7 @@ function AdminPage() {
       if (addr.state) parts.push(addr.state);
       if (addr.zipCode) parts.push(addr.zipCode);
       return parts.join(', ') || 'N/A';
-    } catch (e) {
+    } catch (_e) {
       return 'N/A';
     }
   };
@@ -44,7 +44,7 @@ function AdminPage() {
           navigate('/');
           return false;
         }
-      } catch (e) {
+      } catch (_e) {
         navigate('/login');
         return false;
       }
@@ -62,8 +62,8 @@ function AdminPage() {
         };
 
         const [usersResponse, restaurantsResponse] = await Promise.all([
-          fetch("/api/admin/users", { headers }),
-          fetch("/api/admin/restaurants", { headers })
+          fetch('/api/admin/users', { headers }),
+          fetch('/api/admin/restaurants', { headers })
         ]);
 
         if (!usersResponse.ok || !restaurantsResponse.ok) {

@@ -101,7 +101,7 @@ const authService = {
           }
         });
       }
-    } catch (e) {
+    } catch (_e) {
       // ignore errors on logout
     } finally {
       localStorage.removeItem('token');

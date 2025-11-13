@@ -23,7 +23,7 @@ export async function requestAndRegisterToken(firebaseConfig) {
     if (permission !== 'granted') return { success: false, message: 'Notification permission denied' };
 
     // VAPID key must be set in firebase console (Web Push certificates)
-  const vapidKey = firebaseConfig?.vapidKey || VAPID_KEY || null; // prefer config.vapidKey then exported VAPID_KEY
+    const vapidKey = firebaseConfig?.vapidKey || VAPID_KEY || null; // prefer config.vapidKey then exported VAPID_KEY
     // Register service worker for background messages
     let swRegistration = null;
     try {
