@@ -13,10 +13,10 @@ const OrderSchema = new mongoose.Schema({
   ],
   deliveryAddress: String,
   paymentMethod: String,
-  status: { type: String, default: "Placed" }, // Keep your capitalization
+  status: { type: String, default: 'Placed' }, // Keep your capitalization
   totalAmount: Number,
   razorpayOrderId: String,
-  deliveryPartner: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  deliveryPartner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   tracking: {
     accepted: { type: Date, default: null },
     reached_restaurant: { type: Date, default: null },

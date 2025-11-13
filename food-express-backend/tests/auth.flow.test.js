@@ -5,6 +5,8 @@ const connectDB = require('../config/db');
 let app; 
 
 let mongo; let email;
+let _baseToken; 
+
 
 beforeAll(async () => {
   process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret';
@@ -15,7 +17,7 @@ beforeAll(async () => {
   email = `user_${Date.now()}@ex.com`;
   await request(app).post('/api/auth/register').send({ email, password: 'Pass1234' });
   const login = await request(app).post('/api/auth/login').send({ email, password: 'Pass1234' });
-  baseToken = login.body.token;
+  _baseToken = login.body.token;
 });
 
 afterAll(async () => {

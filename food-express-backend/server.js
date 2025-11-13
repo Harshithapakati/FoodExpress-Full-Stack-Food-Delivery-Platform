@@ -96,7 +96,7 @@ if (process.env.JWT_SECRET === 'your_jwt_secret_key_here') {
   console.warn('⚠️ WARNING: Using default JWT secret. Please change JWT_SECRET in .env for production!');
 }
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`🚀 Server started on port ${PORT}`);
   console.log(`📧 Email service: ${process.env.EMAIL_USER ? 'Configured' : 'Not configured'}`);

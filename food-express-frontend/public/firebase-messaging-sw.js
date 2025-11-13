@@ -3,13 +3,13 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-comp
 
 // Firebase web app configuration (keep in sync with your app firebaseConfig.js)
 const firebaseConfig = {
-  apiKey: "AIzaSyBElhcc78GVO7dmDwLmvU-sx-kkLbVBHjk",
-  authDomain: "foodexpress-41056.firebaseapp.com",
-  projectId: "foodexpress-41056",
-  storageBucket: "foodexpress-41056.firebasestorage.app",
-  messagingSenderId: "800450847647",
-  appId: "1:800450847647:web:0948dfbc59bc4c0ee753aa",
-  measurementId: "G-1TTRCMS848"
+  apiKey: 'AIzaSyBElhcc78GVO7dmDwLmvU-sx-kkLbVBHjk',
+  authDomain: 'foodexpress-41056.firebaseapp.com',
+  projectId: 'foodexpress-41056',
+  storageBucket: 'foodexpress-41056.firebasestorage.app',
+  messagingSenderId: '800450847647',
+  appId: '1:800450847647:web:0948dfbc59bc4c0ee753aa',
+  measurementId: 'G-1TTRCMS848'
 };
 
 firebase.initializeApp(firebaseConfig);

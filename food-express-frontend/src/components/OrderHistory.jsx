@@ -9,7 +9,7 @@ function OrderHistory() {
 
   // These were in HEAD branch, so they must be preserved
   const listRef = useRef(null);
-  const location = useLocation();
+  const _location = useLocation();
   const [retrying, setRetrying] = useState(null);
 
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ function OrderHistory() {
     setLoading(true);
     const token = localStorage.getItem('token');
 
-  const res = await fetch(`${API}/orders/history`, {
+    const res = await fetch(`${API}/orders/history`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 

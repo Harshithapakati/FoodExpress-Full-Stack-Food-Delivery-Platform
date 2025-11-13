@@ -1,5 +1,4 @@
 // Simple promotion script: node scripts/promoteUser.js --email user@example.com --role partner
-const mongoose = require('mongoose');
 const User = require('../models/User');
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });

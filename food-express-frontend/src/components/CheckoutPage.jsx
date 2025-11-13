@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { useCart } from "./CartContext";
-import { useNavigate } from "react-router-dom";
-import "./CheckoutPage.css";
+import React, { useState } from 'react';
+import { useCart } from './CartContext';
+import { useNavigate } from 'react-router-dom';
+import './CheckoutPage.css';
 import { API } from '../services/api';
 
 function PaymentPage({ onBack }) {
@@ -19,15 +19,15 @@ export default function CheckoutPage() {
   const navigate = useNavigate();
 
   const [address, setAddress] = useState({
-    name: "",
-    phone: "",
-    house: "",
-    street: "",
-    city: "Bengaluru",
-    pincode: ""
+    name: '',
+    phone: '',
+    house: '',
+    street: '',
+    city: 'Bengaluru',
+    pincode: ''
   });
 
-  const [payMethod, setPayMethod] = useState("cash");
+  const [payMethod, setPayMethod] = useState('cash');
   const [placed, setPlaced] = useState(false);
   const [paymentStarted, setPaymentStarted] = useState(false);
   const [errors, setErrors] = useState({});
@@ -35,9 +35,9 @@ export default function CheckoutPage() {
   const restaurantInfo =
     cartItems.length > 0
       ? {
-          name: cartItems[0].restaurantName,
-          id: cartItems[0].restaurantId || ""
-        }
+        name: cartItems[0].restaurantName,
+        id: cartItems[0].restaurantId || ''
+      }
       : null;
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.qty * item.price, 0);
@@ -47,12 +47,12 @@ export default function CheckoutPage() {
 
   const validate = () => {
     let currErrors = {};
-    if (!address.name.trim()) currErrors.name = "Name is required";
-    if (!/^\d{10}$/.test(address.phone)) currErrors.phone = "Phone must be 10 digits";
-    if (!address.house.trim()) currErrors.house = "House no./Flat is required";
-    if (!address.street.trim()) currErrors.street = "Street/Area is required";
-    if (!address.city.trim()) currErrors.city = "City is required";
-    if (!/^\d{6}$/.test(address.pincode)) currErrors.pincode = "Pincode must be 6 digits";
+    if (!address.name.trim()) currErrors.name = 'Name is required';
+    if (!/^\d{10}$/.test(address.phone)) currErrors.phone = 'Phone must be 10 digits';
+    if (!address.house.trim()) currErrors.house = 'House no./Flat is required';
+    if (!address.street.trim()) currErrors.street = 'Street/Area is required';
+    if (!address.city.trim()) currErrors.city = 'City is required';
+    if (!/^\d{6}$/.test(address.pincode)) currErrors.pincode = 'Pincode must be 6 digits';
 
     setErrors(currErrors);
     return Object.keys(currErrors).length === 0;
@@ -66,16 +66,16 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     if (cartItems.length === 0) {
-      alert("Cart is empty. Add items before checkout.");
+      alert('Cart is empty. Add items before checkout.');
       return;
     }
     if (!validate()) return;
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     const totalAmount = total;
 
     const orderPayload = {
-      restaurantName: restaurantInfo?.name || "",
+      restaurantName: restaurantInfo?.name || '',
       items: cartItems.map((item) => ({
         name: item.name,
         price: item.price,
@@ -88,12 +88,12 @@ export default function CheckoutPage() {
     };
 
     // ✅ CASH ON DELIVERY FLOW
-    if (payMethod === "cash") {
+    if (payMethod === 'cash') {
       try {
-  const orderRes = await fetch(`${API}/orders/place`, {
-          method: "POST",
+        const orderRes = await fetch(`${API}/orders/place`, {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
           },
           body: JSON.stringify(orderPayload)
@@ -101,28 +101,28 @@ export default function CheckoutPage() {
 
         const orderData = await orderRes.json();
         if (!orderData.success)
-          throw new Error(orderData.error || "Order placement failed");
+          throw new Error(orderData.error || 'Order placement failed');
 
-  await fetch(`${API}/cart/clear`, {
-          method: "DELETE",
+        await fetch(`${API}/cart/clear`, {
+          method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
         });
 
         setCartItems([]);
         setPlaced(true);
       } catch (error) {
-        alert("Order failed: " + error.message);
+        alert('Order failed: ' + error.message);
       }
       return;
     }
 
     // ✅ RAZORPAY CARD PAYMENT FLOW
-    if (payMethod === "card") {
+    if (payMethod === 'card') {
       try {
-  const orderRes = await fetch(`${API}/payment/order`, {
-          method: "POST",
+        const orderRes = await fetch(`${API}/payment/order`, {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({ amount: totalAmount })
@@ -130,22 +130,22 @@ export default function CheckoutPage() {
 
         const orderData = await orderRes.json();
         if (!orderData.success)
-          throw new Error(orderData.error || "Failed to create payment order");
+          throw new Error(orderData.error || 'Failed to create payment order');
 
         const options = {
           key: orderData.key_id,
           amount: orderData.amount,
           currency: orderData.currency,
           order_id: orderData.order_id,
-          name: "FoodExpress",
-          description: `Order from ${restaurantInfo?.name || "Restaurant"}`,
+          name: 'FoodExpress',
+          description: `Order from ${restaurantInfo?.name || 'Restaurant'}`,
 
           handler: async function (response) {
             try {
               const verifyRes = await fetch(`${API}/payment/verify`, {
-                method: "POST",
+                method: 'POST',
                 headers: {
-                  "Content-Type": "application/json",
+                  'Content-Type': 'application/json',
                   Authorization: `Bearer ${token}`
                 },
                 body: JSON.stringify({
@@ -160,29 +160,29 @@ export default function CheckoutPage() {
 
               if (verifyData.success) {
                 await fetch(`${API}/cart/clear`, {
-                  method: "DELETE",
+                  method: 'DELETE',
                   headers: { Authorization: `Bearer ${token}` }
                 });
 
                 setCartItems([]);
-                alert("Payment successful! Order placed successfully.");
-                navigate("/order-history");
+                alert('Payment successful! Order placed successfully.');
+                navigate('/order-history');
               } else {
-                alert("Payment verification failed.");
+                alert('Payment verification failed.');
               }
             } catch (err) {
-              alert("Payment verification failed: " + err.message);
+              alert('Payment verification failed: ' + err.message);
             }
           },
 
           prefill: {
             name: address.name,
             contact: address.phone,
-            email: JSON.parse(localStorage.getItem("user") || "{}").email || ""
+            email: JSON.parse(localStorage.getItem('user') || '{}').email || ''
           },
 
           theme: {
-            color: "#e23744"
+            color: '#e23744'
           }
         };
 
@@ -190,13 +190,13 @@ export default function CheckoutPage() {
         rzp.open();
         setPaymentStarted(true);
       } catch (err) {
-        alert("Payment failed: " + err.message);
+        alert('Payment failed: ' + err.message);
       }
     }
   };
 
   const handleAddMore = () => {
-    if (cartItems.length === 0) navigate("/browse");
+    if (cartItems.length === 0) navigate('/browse');
     else if (restaurantInfo?.id) navigate(`/menu?id=${restaurantInfo.id}`);
   };
 
@@ -238,7 +238,7 @@ export default function CheckoutPage() {
           {cartItems.map((item) => (
             <div key={item._id} className="checkout-cart-item">
               <img
-                src={item.img || "https://via.placeholder.com/80"}
+                src={item.img || 'https://via.placeholder.com/80'}
                 alt={item.name}
                 className="checkout-cart-item-img"
               />
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
               <div className="checkout-cart-item-details">
                 <div className="checkout-cart-item-name">{item.name}</div>
 
-                <div style={{ display: "flex", alignItems: "center" }}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
                   Qty:
                   <button
                     className="quantity-btn"
@@ -257,7 +257,7 @@ export default function CheckoutPage() {
                     −
                   </button>
 
-                  <span style={{ margin: "0 8px" }}>{item.qty}</span>
+                  <span style={{ margin: '0 8px' }}>{item.qty}</span>
 
                   <button
                     className="quantity-btn"
@@ -270,12 +270,12 @@ export default function CheckoutPage() {
                     className="remove-btn"
                     style={{
                       marginLeft: 14,
-                      color: "#e23744",
-                      fontWeight: "bold",
-                      border: "none",
-                      background: "transparent",
-                      fontSize: "18px",
-                      cursor: "pointer"
+                      color: '#e23744',
+                      fontWeight: 'bold',
+                      border: 'none',
+                      background: 'transparent',
+                      fontSize: '18px',
+                      cursor: 'pointer'
                     }}
                     onClick={() => handleRemoveItem(item._id)}
                     title="Remove item"
@@ -290,7 +290,7 @@ export default function CheckoutPage() {
           ))}
 
           <button onClick={handleAddMore} className="checkout-btn add-more-btn">
-            {cartItems.length === 0 ? "Add Items" : "Add More Items"}
+            {cartItems.length === 0 ? 'Add Items' : 'Add More Items'}
           </button>
 
           <div className="checkout-bill-summary">
@@ -300,7 +300,7 @@ export default function CheckoutPage() {
             </div>
             <div>
               <span>Delivery Charges</span>
-              <span>{delivery === 0 ? "Free" : `₹${delivery}`}</span>
+              <span>{delivery === 0 ? 'Free' : `₹${delivery}`}</span>
             </div>
             <div>
               <span>Taxes & GST</span>
@@ -320,7 +320,7 @@ export default function CheckoutPage() {
           <input
             required
             placeholder="Full name"
-            className={`checkout-input ${errors.name ? "input-error" : ""}`}
+            className={`checkout-input ${errors.name ? 'input-error' : ''}`}
             value={address.name}
             onChange={(e) => setAddress({ ...address, name: e.target.value })}
           />
@@ -329,7 +329,7 @@ export default function CheckoutPage() {
           <input
             required
             placeholder="Phone number"
-            className={`checkout-input ${errors.phone ? "input-error" : ""}`}
+            className={`checkout-input ${errors.phone ? 'input-error' : ''}`}
             value={address.phone}
             onChange={(e) => setAddress({ ...address, phone: e.target.value })}
           />
@@ -338,7 +338,7 @@ export default function CheckoutPage() {
           <input
             required
             placeholder="Flat/House no."
-            className={`checkout-input ${errors.house ? "input-error" : ""}`}
+            className={`checkout-input ${errors.house ? 'input-error' : ''}`}
             value={address.house}
             onChange={(e) => setAddress({ ...address, house: e.target.value })}
           />
@@ -347,7 +347,7 @@ export default function CheckoutPage() {
           <input
             required
             placeholder="Street/Area"
-            className={`checkout-input ${errors.street ? "input-error" : ""}`}
+            className={`checkout-input ${errors.street ? 'input-error' : ''}`}
             value={address.street}
             onChange={(e) => setAddress({ ...address, street: e.target.value })}
           />
@@ -357,14 +357,14 @@ export default function CheckoutPage() {
             <input
               required
               placeholder="City"
-              className={`checkout-input small-input ${errors.city ? "input-error" : ""}`}
+              className={`checkout-input small-input ${errors.city ? 'input-error' : ''}`}
               value={address.city}
               onChange={(e) => setAddress({ ...address, city: e.target.value })}
             />
             <input
               required
               placeholder="Pincode"
-              className={`checkout-input small-input ${errors.pincode ? "input-error" : ""}`}
+              className={`checkout-input small-input ${errors.pincode ? 'input-error' : ''}`}
               value={address.pincode}
               onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
             />
@@ -379,9 +379,9 @@ export default function CheckoutPage() {
                 type="radio"
                 name="pay"
                 value="cash"
-                checked={payMethod === "cash"}
-                onChange={() => setPayMethod("cash")}
-              />{" "}
+                checked={payMethod === 'cash'}
+                onChange={() => setPayMethod('cash')}
+              />{' '}
               Cash on Delivery
             </label>
 
@@ -390,9 +390,9 @@ export default function CheckoutPage() {
                 type="radio"
                 name="pay"
                 value="card"
-                checked={payMethod === "card"}
-                onChange={() => setPayMethod("card")}
-              />{" "}
+                checked={payMethod === 'card'}
+                onChange={() => setPayMethod('card')}
+              />{' '}
               Card
             </label>
           </div>

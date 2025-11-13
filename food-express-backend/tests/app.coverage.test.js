@@ -30,66 +30,66 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-	if (mongoose.connection.readyState) {
-		await mongoose.disconnect();
-	}
-	if (mongo) await mongo.stop();
+  if (mongoose.connection.readyState) {
+    await mongoose.disconnect();
+  }
+  if (mongo) await mongo.stop();
 });
 
 test('restaurants list endpoint responds', async () => {
-	const res = await request(app).get('/api/restaurants');
-	expect(res.status).toBe(200);
-	expect(res.body).toHaveProperty('success', true);
+  const res = await request(app).get('/api/restaurants');
+  expect(res.status).toBe(200);
+  expect(res.body).toHaveProperty('success', true);
 });
 
 test('cart add/get/clear flow', async () => {
-	// Provide a valid 24-char hex string for menuItemId
-	const fakeMenuItemId = '507f1f77bcf86cd799439011';
-	const add = await request(app)
-		.post('/api/cart/add')
-		.set('Authorization', `Bearer ${token}`)
-		.send({ menuItemId: fakeMenuItemId, name: 'Item', price: 100, image: '', restaurantId: 'r1', restaurantName: 'R' });
-	expect([200,201]).toContain(add.status);
+  // Provide a valid 24-char hex string for menuItemId
+  const fakeMenuItemId = '507f1f77bcf86cd799439011';
+  const add = await request(app)
+    .post('/api/cart/add')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ menuItemId: fakeMenuItemId, name: 'Item', price: 100, image: '', restaurantId: 'r1', restaurantName: 'R' });
+  expect([200,201]).toContain(add.status);
 
-	const get = await request(app)
-		.get('/api/cart')
-		.set('Authorization', `Bearer ${token}`);
-	expect(get.status).toBe(200);
-	expect(get.body.cart.items.length).toBeGreaterThan(0);
+  const get = await request(app)
+    .get('/api/cart')
+    .set('Authorization', `Bearer ${token}`);
+  expect(get.status).toBe(200);
+  expect(get.body.cart.items.length).toBeGreaterThan(0);
 
-	const clear = await request(app)
-		.delete('/api/cart/clear')
-		.set('Authorization', `Bearer ${token}`);
-	expect(clear.status).toBe(200);
-	expect(clear.body.cart.items.length).toBe(0);
+  const clear = await request(app)
+    .delete('/api/cart/clear')
+    .set('Authorization', `Bearer ${token}`);
+  expect(clear.status).toBe(200);
+  expect(clear.body.cart.items.length).toBe(0);
 });
 
 test('payment order + verify success creates order', async () => {
-	const amount = 250;
-	const ord = await request(app)
-		.post('/api/payment/order')
-		.set('Authorization', `Bearer ${token}`)
-		.send({ amount });
-	expect(ord.status).toBe(200);
+  const amount = 250;
+  const ord = await request(app)
+    .post('/api/payment/order')
+    .set('Authorization', `Bearer ${token}`)
+    .send({ amount });
+  expect(ord.status).toBe(200);
 
-	const { order_id } = ord.body;
-	const paymentId = 'pay_ok_1';
-	const text = `${order_id}|${paymentId}`;
-	const sig = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(text).digest('hex');
+  const { order_id } = ord.body;
+  const paymentId = 'pay_ok_1';
+  const text = `${order_id}|${paymentId}`;
+  const sig = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(text).digest('hex');
 
-	const verify = await request(app)
-		.post('/api/payment/verify')
-		.set('Authorization', `Bearer ${token}`)
-		.send({
-			razorpay_order_id: order_id,
-			razorpay_payment_id: paymentId,
-			razorpay_signature: sig,
-			items: [{ name: 'Item', price: 100, quantity: 1 }],
-			totalAmount: amount,
-			restaurantName: 'R',
-			deliveryAddress: 'addr',
-			paymentMethod: 'card',
-		});
-	expect([200,201]).toContain(verify.status);
-	expect(verify.body.success).toBe(true);
+  const verify = await request(app)
+    .post('/api/payment/verify')
+    .set('Authorization', `Bearer ${token}`)
+    .send({
+      razorpay_order_id: order_id,
+      razorpay_payment_id: paymentId,
+      razorpay_signature: sig,
+      items: [{ name: 'Item', price: 100, quantity: 1 }],
+      totalAmount: amount,
+      restaurantName: 'R',
+      deliveryAddress: 'addr',
+      paymentMethod: 'card',
+    });
+  expect([200,201]).toContain(verify.status);
+  expect(verify.body.success).toBe(true);
 });

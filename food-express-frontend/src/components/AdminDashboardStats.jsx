@@ -1,30 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { Line } from "react-chartjs-2";
+import React, { useEffect, useState } from 'react';
+import { Line } from 'react-chartjs-2';
 import {
   Chart, LineElement, LinearScale, CategoryScale, PointElement, Title, Tooltip, Legend
 } from 'chart.js';
 import {
   FaCalendarWeek, FaCalendarAlt,
   FaRegCalendar, FaChartPie
-} from "react-icons/fa";
+} from 'react-icons/fa';
 import './AdminDashboardStats.css';
 
 Chart.register(LineElement, LinearScale, CategoryScale, PointElement, Title, Tooltip, Legend);
 
 const rangeOptions = [
-  { key: "7d", label: "7 Days", icon: <FaCalendarWeek /> },
-  { key: "1m", label: "1 Month", icon: <FaCalendarAlt /> },
-  { key: "1y", label: "1 Year", icon: <FaRegCalendar /> },
-  { key: "5y", label: "5 Years", icon: <FaChartPie /> }
+  { key: '7d', label: '7 Days', icon: <FaCalendarWeek /> },
+  { key: '1m', label: '1 Month', icon: <FaCalendarAlt /> },
+  { key: '1y', label: '1 Year', icon: <FaRegCalendar /> },
+  { key: '5y', label: '5 Years', icon: <FaChartPie /> }
 ];
 
 const AdminDashboardStats = () => {
   const [stats, setStats] = useState(null);
-  const [range, setRange] = useState("7d");
+  const [range, setRange] = useState('7d');
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     fetch(`/api/admin/stats?range=${range}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -35,7 +35,7 @@ const AdminDashboardStats = () => {
       .then(data => setStats(data))
       .catch(err => {
         console.error('Stats fetch error:', err);
-        setError("Failed to fetch stats");
+        setError('Failed to fetch stats');
       });
   }, [range]);
 
@@ -52,19 +52,19 @@ const AdminDashboardStats = () => {
     labels,
     datasets: [
       {
-        label: "Revenue",
+        label: 'Revenue',
         data: revenueData,
         fill: true,
-        borderColor: "#2196f3",
-        backgroundColor: "rgba(33,150,243,0.14)",
+        borderColor: '#2196f3',
+        backgroundColor: 'rgba(33,150,243,0.14)',
         yAxisID: 'y',
       },
       {
-        label: "Orders",
+        label: 'Orders',
         data: ordersData,
         fill: false,
-        borderColor: "#4caf50",
-        backgroundColor: "rgba(76,175,80,0.07)",
+        borderColor: '#4caf50',
+        backgroundColor: 'rgba(76,175,80,0.07)',
         yAxisID: 'y1',
       }
     ]
@@ -97,7 +97,7 @@ const AdminDashboardStats = () => {
         {rangeOptions.map(opt => (
           <div
             key={opt.key}
-            className={`stats-sidebar-option${range === opt.key ? " selected" : ""}`}
+            className={`stats-sidebar-option${range === opt.key ? ' selected' : ''}`}
             onClick={() => setRange(opt.key)}
           >
             <span className="sidebar-icon">{opt.icon}</span>
@@ -107,7 +107,7 @@ const AdminDashboardStats = () => {
       </div>
       {/* Main stats content */}
       <div className="stats-main-content">
-        <h2 style={{marginBottom:"16px", color:"#1a237e"}}>Performance Overview</h2>
+        <h2 style={{marginBottom:'16px', color:'#1a237e'}}>Performance Overview</h2>
         <div className="stats-summary">
           <div>
             <strong>Total Orders</strong>
@@ -122,7 +122,7 @@ const AdminDashboardStats = () => {
             <div className="admin-stats-summary-value">₹{stats.totalRevenue.toFixed(2)}</div>
           </div>
         </div>
-        <div style={{maxWidth:"700px"}}>
+        <div style={{maxWidth:'700px'}}>
           <Line data={chartData} options={chartOptions}/>
         </div>
       </div>

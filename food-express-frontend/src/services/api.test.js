@@ -73,15 +73,15 @@ describe('services/api environment resolution', () => {
     expect(mod.API).toBe('http://globalthis:6000/api');
   });
 
-  test('defaults to localhost:5000 when no sources', () => {
+  test('defaults to localhost:5001 when no sources', () => {
     global.eval = jest.fn(() => { throw new Error('no import.meta'); });
     delete process.env.VITE_API_ROOT;
     delete global.VITE_API_ROOT;
     delete global.window;
 
     const mod = require(modulePath);
-    expect(mod.API_ROOT).toBe('http://localhost:5000');
-    expect(mod.API).toBe('http://localhost:5000/api');
+    expect(mod.API_ROOT).toBe('http://localhost:5001');
+    expect(mod.API).toBe('http://localhost:5001/api');
   });
 
   test('logs API_ROOT to window.console.log when window exists', () => {
