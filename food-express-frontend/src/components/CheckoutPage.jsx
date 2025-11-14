@@ -15,7 +15,7 @@ function PaymentPage({ onBack }) {
 }
 
 export default function CheckoutPage() {
-  const { cartItems, updateQuantity, removeFromCart, setCartItems } = useCart();
+  const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart();
   const navigate = useNavigate();
 
   const [address, setAddress] = useState({
@@ -103,12 +103,7 @@ export default function CheckoutPage() {
         if (!orderData.success)
           throw new Error(orderData.error || 'Order placement failed');
 
-        await fetch(`${API}/cart/clear`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        setCartItems([]);
+        await clearCart();
         setPlaced(true);
       } catch (error) {
         alert('Order failed: ' + error.message);
@@ -159,12 +154,7 @@ export default function CheckoutPage() {
               const verifyData = await verifyRes.json();
 
               if (verifyData.success) {
-                await fetch(`${API}/cart/clear`, {
-                  method: 'DELETE',
-                  headers: { Authorization: `Bearer ${token}` }
-                });
-
-                setCartItems([]);
+                await clearCart();
                 alert('Payment successful! Order placed successfully.');
                 navigate('/order-history');
               } else {
