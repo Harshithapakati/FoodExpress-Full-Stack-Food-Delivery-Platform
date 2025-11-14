@@ -194,35 +194,33 @@
 .clear-cart-btn {
   width: 100%;
   padding: 14px;
-  border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s;
-  margin-bottom: 10px;
-}
+  transition: all 0.25s ease;
+  margin-bottom: 12px;
 
-.checkout-btn {
   background: #e23744;
   color: #fff;
-}
+  border: 2px solid #e23744;
 
-.checkout-btn:hover {
-  background: #d32f2f;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.checkout-btn:hover,
+.clear-cart-btn:hover {
+  background: #fff;
+  color: #e23744;
+  border: 2px solid #e23744;
   transform: translateY(-2px);
 }
-
-.clear-cart-btn {
-  background: transparent;
-  color: #686b78;
-  border: 2px solid #ddd;
+.cart-footer button {
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.clear-cart-btn:hover {
-  border-color: #e23744;
-  color: #e23744;
-}
 
 .empty-cart {
   padding: 60px 30px;
