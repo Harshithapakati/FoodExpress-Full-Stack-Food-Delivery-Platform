@@ -87,8 +87,27 @@ export function CartProvider({ children }) {
     }
   };
 
+  // Clear entire cart
+  const clearCart = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      await fetch(`${API}/cart/clear`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Refresh cart after clearing
+      await fetchCartFromBackend();
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+    }
+  };
+
+  // expose a refresh function so callers can re-sync the cart after mutating it
+  const refreshCart = fetchCartFromBackend;
+
   return (
-    <CartContext.Provider value={{ cartItems, setCartItems, updateQuantity, removeFromCart }}>
+    <CartContext.Provider value={{ cartItems, setCartItems, updateQuantity, removeFromCart, clearCart, refreshCart }}>
       {children}
     </CartContext.Provider>
   );
