@@ -3,6 +3,8 @@ const router = express.Router();
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Order = require('../models/Order');
+const User = require('../models/User');
+const { sendOrderConfirmation } = require('../utils/emailService');
 const auth = require('../middleware/auth');
 
 // Initialize Razorpay instance (used when not in mock mode)
@@ -95,6 +97,9 @@ router.post('/verify', auth, async (req, res) => {
     }
 
     // Signature is valid - create order in database
+    // Prefer email from authenticated user, then allow guest to pass `email` in body
+    let recipientEmail = (req.user && req.user.email) || (req.body && req.body.email) || null;
+
     const order = new Order({
       userId: req.user && (req.user.id || req.user.userId),
       restaurantName: restaurantName || '',
@@ -107,6 +112,25 @@ router.post('/verify', auth, async (req, res) => {
 
     await order.save();
     console.log('Order saved successfully after payment verification, id:', order._id);
+
+    // If recipientEmail still not known, attempt to resolve from the user referenced by the order
+    if (!recipientEmail && order.userId) {
+      try {
+        const user = await User.findById(order.userId).select('email');
+        if (user && user.email) recipientEmail = user.email;
+      } catch (err) {
+        console.error('User lookup failed for order email fallback:', err && err.message ? err.message : err);
+      }
+    }
+
+    console.log('Order saved, will attempt email to:', recipientEmail || '(no email on order)');
+
+    // Attempt to send confirmation email asynchronously so we don't block the API response
+    if (recipientEmail) {
+      sendOrderConfirmation(recipientEmail, order)
+        .then(() => console.log(`sendOrderConfirmation succeeded for order ${order._id} to ${recipientEmail}`))
+        .catch(e => console.error(`sendOrderConfirmation failed for order ${order._id} to ${recipientEmail}:`, e && e.message ? e.message : e));
+    }
 
     res.json({ success: true, order, message: 'Payment verified and order created successfully' });
   } catch (error) {
