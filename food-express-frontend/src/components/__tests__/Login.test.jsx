@@ -1,3 +1,4 @@
+/* global Buffer */
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
@@ -124,7 +125,7 @@ describe('Login Component', () => {
   test('login without user object extracts from JWT', async () => {
     // Create a fake JWT token with payload
     const payload = { email: 'jwt@example.com', id: 'jwt123', role: 'user' };
-    const fakeToken = `header.${btoa(JSON.stringify(payload))}.signature`;
+    const fakeToken = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
 
     authService.login.mockResolvedValue({
       success: true,
