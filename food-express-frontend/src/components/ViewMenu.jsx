@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useCart } from './CartContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import './ViewMenu.css';
 import { FaArrowLeft } from 'react-icons/fa';
@@ -15,6 +16,8 @@ function ViewMenu() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const restaurantId = searchParams.get('id');
+
+  const { refreshCart } = useCart();
 
 
   useEffect(() => {
@@ -80,6 +83,8 @@ function ViewMenu() {
       const data = await response.json(); 
       if (data.success) {
         alert('✅ Item added to cart!');
+        // refresh cart context so other pages (checkout) see the new item immediately
+        if (refreshCart) await refreshCart();
       } else {
         alert('Failed to add item to cart');
       }
@@ -115,7 +120,7 @@ function ViewMenu() {
            Back
           </button>
           <div className="logo">
-            <h1>🍽️ FoodHub</h1>
+            <h1>🍽️ FoodExpress</h1>
           </div>
         </div>
       </header>

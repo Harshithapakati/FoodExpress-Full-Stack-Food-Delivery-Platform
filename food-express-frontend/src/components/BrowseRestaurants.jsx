@@ -151,7 +151,7 @@ function BrowseRestaurants() {
       <header className="header">
         <div className="header-content">
           <div className="logo" onClick={() => navigate('/browse')}>
-            <h1>🍽️ FoodHub</h1>
+            <h1>🍽️ FoodExpress</h1>
           </div>
           <div className="header-right">
             {user ? (

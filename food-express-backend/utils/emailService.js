@@ -77,7 +77,8 @@ const sendOrderConfirmation = async (email, order) => {
     </tr>`;
   }).join('');
 
-  const delivery = order.deliveryAddress || {};
+  const delivery = (order && typeof order.deliveryAddress === 'object') ? order.deliveryAddress : {};
+  const deliveryRaw = order && typeof order.deliveryAddress === 'string' ? order.deliveryAddress : '';
   const orderId = order._id || order.id || '';
   const createdAt = order.createdAt ? new Date(order.createdAt).toLocaleString() : (order.createdAtStr || '');
   const status = order.status || 'received';
@@ -115,6 +116,7 @@ const sendOrderConfirmation = async (email, order) => {
         <p style="color:#555;margin:0">${delivery.addressLine1 || delivery.address || ''}</p>
         <p style="color:#555;margin:0">${delivery.city || ''} ${delivery.postalCode || ''}</p>
         <p style="color:#555;margin:0">${delivery.phone || delivery.contact || ''}</p>
+        ${deliveryRaw ? `<h4 style="margin-top:12px;margin-bottom:6px"></h4><p style="color:#555;margin:0">${deliveryRaw}</p>` : ''}
 
         <hr style="margin:20px 0" />
         <p style="color:#777;font-size:12px">If you have any questions, reply to this email or contact our support.</p>

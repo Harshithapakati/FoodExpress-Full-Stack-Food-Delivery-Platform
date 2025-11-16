@@ -40,3 +40,13 @@
 .read-the-docs {
   color: #888;
 }
+
+/* In-app toast notifications (created by `showInAppToast`) */
+#fe-toast-container .fe-toast {
+  color: white !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+}
+
+#fe-toast-container .fe-toast > div {
+  color: inherit !important;
+}

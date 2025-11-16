@@ -1,107 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './CartModal.css';
 import { API } from '../services/api';
+import { useCart } from './CartContext';
 
 function CartModal({ onClose, updateCartCount }) {
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { cartItems, updateQuantity, removeFromCart, clearCart, refreshCart } = useCart();
+  const loading = false; // CartContext fetches on provider mount
   const navigate = useNavigate();
-
   useEffect(() => {
-    fetchCart();
-  }, []);
-
-  const fetchCart = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      // Try header first, then fallback to query-param if needed
-      let response = await fetch(`${API}/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      let data = await response.json();
-      if (response.status === 401) {
-        response = await fetch(`${API}/cart?token=${encodeURIComponent(token)}`);
-        data = await response.json();
-      }
-      if (data.success) {
-        setCart(data.cart);
-        console.log('Cart data fetched in modal:', data.cart);
-      }
-    } catch (error) {
-      console.error('Error fetching cart:', error);
-    }
-    setLoading(false);
-  };
-
-  const updateQuantity = async (itemId, newQuantity) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API}/cart/update/${itemId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ quantity: newQuantity, token })
-      });
-      const data = await response.json();
-      if (data.success) {
-        setCart(data.cart);
-        updateCartCount();
-      }
-    } catch (error) {
-      console.error('Error updating quantity:', error);
-    }
-  };
-
-  const removeItem = async (itemId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API}/cart/remove/${itemId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ token })
-      });
-      const data = await response.json();
-      if (data.success) {
-        setCart(data.cart);
-        updateCartCount();
-      }
-    } catch (error) {
-      console.error('Error removing item:', error);
-    }
-  };
-
-  const clearCart = async () => {
-    if (!window.confirm('Are you sure you want to clear your cart?')) return;
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API}/cart/clear`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ token })
-      });
-      const data = await response.json();
-      if (data.success) {
-        setCart(data.cart);
-        updateCartCount();
-      }
-    } catch (error) {
-      console.error('Error clearing cart:', error);
-    }
-  };
+    if (typeof updateCartCount === 'function') updateCartCount();
+  }, [cartItems, updateCartCount]);
 
   const calculateTotal = () => {
-    if (!(cart && cart.items)) return 0;
-    return cart.items.reduce((total, item) => total + item.price * item.quantity, 0);
+    if (!cartItems || cartItems.length === 0) return 0;
+    return cartItems.reduce((total, item) => total + item.price * item.qty, 0);
   };
 
-  const singleRestaurant =
-    cart &&
-    cart.items &&
-    cart.items.length > 0 &&
-    cart.items.every(item => item.restaurantName === cart.items[0].restaurantName);
+  const singleRestaurant = cartItems && cartItems.length > 0 && cartItems.every(item => item.restaurantName === cartItems[0].restaurantName);
 
   if (loading) {
     return (
@@ -121,13 +37,13 @@ function CartModal({ onClose, updateCartCount }) {
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
-        {cart && cart.items && cart.items.length > 0 ? (
+            {cartItems && cartItems.length > 0 ? (
           <>
             <div className="cart-items">
-              {cart.items.map(item => (
+              {cartItems.map(item => (
                 <div key={item._id} className="cart-item">
                   <img
-                    src={item.image || 'https://via.placeholder.com/80'}
+                    src={item.img || 'https://via.placeholder.com/80'}
                     alt={item.name}
                     className="cart-item-image"
                   />
@@ -139,18 +55,18 @@ function CartModal({ onClose, updateCartCount }) {
                   <div className="cart-item-actions">
                     <div className="quantity-controls">
                       <button
-                        onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                        onClick={async () => { await updateQuantity(item._id, item.qty - 1); if (typeof updateCartCount === 'function') updateCartCount(); }}
                         className="quantity-btn"
-                        disabled={item.quantity <= 1}
+                        disabled={item.qty <= 1}
                       >−</button>
-                      <span className="quantity">{item.quantity}</span>
+                      <span className="quantity">{item.qty}</span>
                       <button
-                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                        onClick={async () => { await updateQuantity(item._id, item.qty + 1); if (typeof updateCartCount === 'function') updateCartCount(); }}
                         className="quantity-btn"
                       >+</button>
                     </div>
                     <button
-                      onClick={() => removeItem(item._id)}
+                      onClick={async () => { await removeFromCart(item._id); if (typeof updateCartCount === 'function') updateCartCount(); }}
                       className="remove-btn"
                     >🗑️</button>
                   </div>
@@ -164,7 +80,7 @@ function CartModal({ onClose, updateCartCount }) {
                 <span className="total-amount">₹{calculateTotal()}</span>
               </div>
 
-              {singleRestaurant ? (
+                {singleRestaurant ? (
                 <button
                   className="checkout-btn"
                   onClick={() => {
@@ -183,7 +99,7 @@ function CartModal({ onClose, updateCartCount }) {
                   </p>
                 </div>
               )}
-              <button className="clear-cart-btn" onClick={clearCart}>
+              <button className="clear-cart-btn" onClick={async () => { if (!window.confirm('Are you sure you want to clear your cart?')) return; await clearCart(); if (typeof updateCartCount === 'function') updateCartCount(); }}>
                 Clear Cart
               </button>
             </div>
