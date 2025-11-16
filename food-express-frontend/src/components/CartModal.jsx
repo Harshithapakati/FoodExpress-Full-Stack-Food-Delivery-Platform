@@ -37,7 +37,7 @@ function CartModal({ onClose, updateCartCount }) {
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
-            {cartItems && cartItems.length > 0 ? (
+        {cartItems && cartItems.length > 0 ? (
           <>
             <div className="cart-items">
               {cartItems.map(item => (
@@ -80,7 +80,7 @@ function CartModal({ onClose, updateCartCount }) {
                 <span className="total-amount">₹{calculateTotal()}</span>
               </div>
 
-                {singleRestaurant ? (
+              {singleRestaurant ? (
                 <button
                   className="checkout-btn"
                   onClick={() => {
