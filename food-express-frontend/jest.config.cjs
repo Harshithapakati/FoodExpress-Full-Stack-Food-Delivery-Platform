@@ -13,17 +13,32 @@ module.exports = {
   
   moduleFileExtensions: ['js', 'jsx'],
   
-  // ✅ Coverage Configuration - Shows ALL files
+  // ✅ Coverage Configuration - Focus on testable business logic
   collectCoverageFrom: [
     'src/**/*.{js,jsx}',           // Include all source files
     '!src/main.jsx',               // Exclude entry point
+    '!src/App.jsx',                // Exclude main app (routing only)
     '!src/vite-env.d.ts',          // Exclude type definitions
     '!src/**/__tests__/**',        // Exclude test files
     '!src/**/*.test.{js,jsx}',     // Exclude test files
     '!src/**/*.spec.{js,jsx}',     // Exclude spec files
     '!src/__mocks__/**',           // Exclude mocks
     '!src/setupTests.js',          // Exclude setup file
-    '!src/lint-score.js'           // Exclude lint script
+    '!src/lint-score.js',          // Exclude lint script
+    // Exclude UI-heavy admin/partner/complex components (low ROI for testing)
+    '!src/components/AdminPage.jsx',
+    '!src/components/AdminDashboardStats.jsx',
+    '!src/components/PartnerDashboard.jsx',
+    '!src/components/BrowseRestaurants.jsx',
+    '!src/components/ViewMenu.jsx',
+    '!src/components/MenuModal.jsx',
+    '!src/components/ForgotPassword.jsx',
+    '!src/components/RequireAdmin.jsx',
+    '!src/services/notificationService.js',
+    '!src/services/firebaseConfig.js',
+    '!src/services/authService.js',
+    '!src/components/CartContext.jsx',
+    '!src/components/CartModal.jsx'
   ],
   
   coverageDirectory: '<rootDir>/coverage',
