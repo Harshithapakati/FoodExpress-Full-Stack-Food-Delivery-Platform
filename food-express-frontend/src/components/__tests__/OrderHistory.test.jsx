@@ -119,4 +119,110 @@ describe('OrderHistory component', () => {
       expect(retryBtn).toBeDisabled();
     });
   });
+
+  test('displays empty state when no orders', async () => {
+    global.fetch = mockFetchImplementation({ orders: [], success: true });
+
+    render(
+      <BrowserRouter>
+        <OrderHistory />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/No orders yet/i)).toBeInTheDocument();
+    });
+  });
+
+  test('displays different order statuses correctly', async () => {
+    global.fetch = mockFetchImplementation({
+      orders: [
+        {
+          _id: 'order1',
+          createdAt: new Date().toISOString(),
+          restaurantName: 'FoodHub',
+          status: 'Delivered',
+          totalAmount: 450,
+          items: [{ name: 'Pizza', quantity: 1, price: 450 }]
+        },
+        {
+          _id: 'order2',
+          createdAt: new Date().toISOString(),
+          restaurantName: 'Burger King',
+          status: 'Preparing',
+          totalAmount: 300,
+          items: [{ name: 'Burger', quantity: 1, price: 300 }]
+        }
+      ],
+      success: true
+    });
+
+    render(
+      <BrowserRouter>
+        <OrderHistory />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Delivered/i)).toBeInTheDocument();
+      expect(screen.getByText(/Preparing/i)).toBeInTheDocument();
+    });
+  });
+
+  test('formats date correctly', async () => {
+    const testDate = new Date('2024-01-15T10:30:00');
+    global.fetch = mockFetchImplementation({
+      orders: [
+        {
+          _id: 'order1',
+          createdAt: testDate.toISOString(),
+          restaurantName: 'FoodHub',
+          status: 'Delivered',
+          totalAmount: 450,
+          items: [{ name: 'Pizza', quantity: 1, price: 450 }]
+        }
+      ],
+      success: true
+    });
+
+    render(
+      <BrowserRouter>
+        <OrderHistory />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/FoodHub/i)).toBeInTheDocument();
+    });
+  });
+
+  test('displays order items correctly', async () => {
+    global.fetch = mockFetchImplementation({
+      orders: [
+        {
+          _id: 'order1',
+          createdAt: new Date().toISOString(),
+          restaurantName: 'FoodHub',
+          status: 'Delivered',
+          totalAmount: 750,
+          items: [
+            { name: 'Pizza', quantity: 2, price: 300 },
+            { name: 'Burger', quantity: 1, price: 150 }
+          ]
+        }
+      ],
+      success: true
+    });
+
+    render(
+      <BrowserRouter>
+        <OrderHistory />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Pizza/i)).toBeInTheDocument();
+      expect(screen.getByText(/Burger/i)).toBeInTheDocument();
+    });
+  });
 });
